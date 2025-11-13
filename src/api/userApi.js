@@ -10,6 +10,9 @@ import { USE_MOCK_API, mockResponse } from "./config";
 const RISK_SOLUTIONS_KEY = "mockRiskSolutions";
 const ENCOURAGEMENT_KEY = "mockEncouragement";
 const STATUS_KEY = "mockUserStatus";
+const CHARACTER_KEY = "mockCharacterInfo";
+const GROWTH_MISSIONS_KEY = "mockGrowthMissions";
+const DAILY_MISSIONS_KEY = "mockDailyMissions";
 
 const readMock = (key, fallback = {}) =>
   JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
@@ -138,10 +141,129 @@ export const getEncouragement = async ({ userId = "guest" } = {}) => {
  * }
  */
 
+const defaultCharacter = () => ({
+  name: "눈송이",
+  level: 4,
+  experience: 3,
+  experienceToNext: 8,
+  personality: "미소 가득한 눈송이",
+  statusMessage: "오늘도 따뜻하게 쉬어가요.",
+  daysStreak: 3,
+  totalPoints: 6,
+  totalFed: 18,
+});
+
+const defaultGrowthMissions = () => [
+  { id: 1, level: "Lv. 1-2", title: "물방울", completed: true },
+  { id: 2, level: "Lv. 3-4", title: "얼음 결정", completed: true },
+  { id: 3, level: "Lv. 5-6", title: "아기 눈송이", completed: false },
+  { id: 4, level: "Lv. 7-8", title: "눈송이", completed: false },
+];
+
+const defaultDailyMissions = () => [
+  { id: 1, icon: "📣", title: "응원 메시지 작성하기", points: 1, completed: false },
+  { id: 2, icon: "💬", title: "댓글 작성하기", points: 1, completed: false },
+  { id: 3, icon: "❤️", title: "좋아요 남기기", points: 1, completed: false },
+  { id: 4, icon: "🌞", title: "연속 출석", points: 1, completed: true },
+];
+
+const readCharacter = () => {
+  const stored = readMock(CHARACTER_KEY, defaultCharacter());
+  if (!stored.experienceToNext) {
+    stored.experienceToNext = 8;
+  }
+  return stored;
+};
+
+export const getCharacterInfo = async () => {
+  if (USE_MOCK_API) {
+    return mockResponse(readCharacter());
+  }
+
+  const { data } = await axiosInstance.get("/api/user/character");
+  return data;
+};
+
+export const getGrowthMissions = async () => {
+  if (USE_MOCK_API) {
+    return mockResponse(readMock(GROWTH_MISSIONS_KEY, defaultGrowthMissions()));
+  }
+
+  const { data } = await axiosInstance.get("/api/user/character/growth-missions");
+  return data;
+};
+
+export const getDailyMissions = async () => {
+  if (USE_MOCK_API) {
+    return mockResponse(readMock(DAILY_MISSIONS_KEY, defaultDailyMissions()));
+  }
+
+  const { data } = await axiosInstance.get("/api/user/character/daily-missions");
+  return data;
+};
+
+export const feedCharacter = async () => {
+  if (USE_MOCK_API) {
+    const current = readCharacter();
+    if (current.totalPoints <= 0) {
+      return mockResponse({
+        success: false,
+        message: "보유한 밥이 부족합니다.",
+      });
+    }
+
+    let { experience, level, experienceToNext } = current;
+    let totalPoints = Math.max(current.totalPoints - 1, 0);
+    let totalFed = current.totalFed + 1;
+
+    experience += 1;
+
+    if (experience >= experienceToNext) {
+      level += 1;
+      experience -= experienceToNext;
+      experienceToNext = Math.round(experienceToNext * 1.2);
+    }
+
+    const updated = {
+      ...current,
+      experience,
+      level,
+      experienceToNext,
+      totalPoints,
+      totalFed,
+    };
+
+    writeMock(CHARACTER_KEY, updated);
+
+    return mockResponse({
+      success: true,
+      character: updated,
+    });
+  }
+
+  const { data } = await axiosInstance.post("/api/user/feed-character");
+  return data;
+};
+
 
 export const clearMockData = () => {
   localStorage.removeItem(RISK_SOLUTIONS_KEY);
   localStorage.removeItem(ENCOURAGEMENT_KEY);
   localStorage.removeItem(STATUS_KEY);
+  localStorage.removeItem(CHARACTER_KEY);
+  localStorage.removeItem(GROWTH_MISSIONS_KEY);
+  localStorage.removeItem(DAILY_MISSIONS_KEY);
   console.log("🧹 [MOCK CLEAR] 초기화 완료");
+};
+
+export const userAPI = {
+  getCharacterInfo,
+  getGrowthMissions,
+  getDailyMissions,
+  feedCharacter,
+  saveInitialSetup,
+  getRiskSolutions,
+  saveEncouragement,
+  getEncouragement,
+  clearMockData,
 };

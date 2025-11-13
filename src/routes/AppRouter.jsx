@@ -17,6 +17,10 @@ import EmotionReportPage from "../pages/EmotionReportPage";
 import OnboardingPage from "../pages/OnboardingPage";
 import LoginPage from "../pages/LoginPage";
 import SignupPage from "../pages/SignupPage"; // 사용할지 말지 결정
+import CommunityPage from "../pages/CommunityPage";
+import PostEditorPage from "../pages/PostEditorPage";
+import CommunityPostPage from "../pages/CommunityPostPage";
+import CharacterPage from "../pages/CharacterPage";
 import { useAuth } from "../context/AuthContext";
 
 import "../pages/AuthPage.css";
@@ -108,7 +112,29 @@ const AppRoutes = () => (
       element={
         <RequireAuth>
           <RequireOnboarded>
-            <div style={{ padding: "32px" }}>Community Page</div>
+            <CommunityPage />
+          </RequireOnboarded>
+        </RequireAuth>
+      }
+    />
+
+    <Route
+      path="/community/write"
+      element={
+        <RequireAuth>
+          <RequireOnboarded>
+            <PostEditorPage />
+          </RequireOnboarded>
+        </RequireAuth>
+      }
+    />
+
+    <Route
+      path="/community/post/:postId"
+      element={
+        <RequireAuth>
+          <RequireOnboarded>
+            <CommunityPostPage />
           </RequireOnboarded>
         </RequireAuth>
       }
@@ -120,7 +146,7 @@ const AppRoutes = () => (
       element={
         <RequireAuth>
           <RequireOnboarded>
-            <div style={{ padding: "32px" }}>Character Page</div>
+            <CharacterPage />
           </RequireOnboarded>
         </RequireAuth>
       }
