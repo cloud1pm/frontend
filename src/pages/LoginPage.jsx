@@ -1,115 +1,114 @@
+// src/pages/LoginPage.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../context/AuthContext";
 import "./AuthPage.css";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, loading, isAuthenticated, user } = useAuth();
+  const { login, googleLogin, isAuthenticated, loading, user } = useAuth();
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // 🔥 로그인된 상태면 chat or onboarding으로 이동
   useEffect(() => {
     if (!loading && isAuthenticated) {
       navigate(user?.isOnboarded ? "/chat" : "/onboarding", { replace: true });
     }
   }, [loading, isAuthenticated, user, navigate]);
 
+  // 텍스트 로그인 입력 처리
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // 텍스트 로그인 제출
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
+
     try {
       const response = await login(form);
-      navigate(
-        response?.user?.isOnboarded ? "/chat" : "/onboarding",
-        { replace: true }
-      );
+      navigate(response?.user?.isOnboarded ? "/chat" : "/onboarding", {
+        replace: true,
+      });
     } catch (err) {
-      const message =
+      const msg =
         err?.response?.data?.message ||
         err?.message ||
         "로그인에 실패했습니다.";
-      setError(message);
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // ⭐ 구글 로그인 처리
+  const handleGoogleSuccess = async (credential) => {
+    try {
+      const response = await googleLogin(credential);
+      navigate(response?.user?.isOnboarded ? "/chat" : "/onboarding", {
+        replace: true,
+      });
+    } catch {
+      alert("구글 로그인 실패");
+    }
+  };
+
   return (
-    <div className="auth-card">
-      <div className="auth-hero">
-        <div className="auth-illustration">🌱</div>
-        <h1 className="auth-title">나의 감정을 이해하고,</h1>
-        <p className="auth-hero-text">
-          스스로를 위로하며 함께 자라는 작은 친구를 만나보세요.
-          <br />
-          오늘 하루의 감정을 기록하고, 마음이 원하는 해결책을 찾아드릴게요.
-        </p>
-      </div>
+    // 👈 [수정] .plain-layout div 추가
+    <div className="plain-layout">
+      <div className="auth-card">
+        <h1 className="auth-title">로그인</h1>
 
-      {error && <div className="auth-error">{error}</div>}
+        {error && <div className="auth-error">{error}</div>}
 
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="email">
-            이메일
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            className="auth-input"
-            placeholder="you@example.com"
-            value={form.email}
-            onChange={handleChange}
-            autoComplete="email"
-            required
-          />
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="auth-field">
+            <label className="auth-label">이메일</label>
+            <input
+              type="email"
+              name="email"
+              className="auth-input"
+              value={form.email}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="auth-field">
+            <label className="auth-label">비밀번호</label>
+            <input
+              type="password"
+              name="password"
+              className="auth-input"
+              value={form.password}
+              onChange={handleChange}
+            />
+          </div>
+
+          <button className="auth-submit" disabled={isSubmitting}>
+            {isSubmitting ? "로그인 중..." : "로그인"}
+          </button>
+        </form>
+
+        <div style={{ margin: "20px 0", textAlign: "center" }}>또는</div>
+
+        {/* 구글 로그인 버튼 */}
+        <GoogleLogin
+          onSuccess={(res) => handleGoogleSuccess(res.credential)}
+          onError={() => alert("구글 로그인 오류")}
+        />
+
+        <div className="auth-footer">
+          계정이 없나요? <Link to="/signup" className="auth-link">회원가입</Link>
         </div>
-
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="password">
-            비밀번호
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            className="auth-input"
-            placeholder="비밀번호를 입력하세요"
-            value={form.password}
-            onChange={handleChange}
-            autoComplete="current-password"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="auth-submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "로그인 중..." : "나의 친구 만나러 가기"}
-        </button>
-      </form>
-
-      <div className="auth-footer">
-        아직 계정이 없나요?
-        <Link to="/signup" className="auth-link">
-          회원가입
-        </Link>
       </div>
     </div>
   );
 };
 
 export default LoginPage;
-

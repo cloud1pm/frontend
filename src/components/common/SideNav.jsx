@@ -4,7 +4,7 @@ import "./SideNav.css";
 
 export default function SideNav({ user, onLogout }) {
   const navLinkClass = ({ isActive }) => (isActive ? "active" : "");
-
+  
   const displayName =
     user?.nickname ||
     user?.username ||

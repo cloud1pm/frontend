@@ -76,9 +76,9 @@ export default function ChatPage() {
               <span className="chat-header-greeting">
                 {displayName}님, 안녕하세요!
               </span>
-              <span className="chat-header-text">
-                대화 내용을 분석하여 감정 상태를 파악하고, 상황에 맞는 도움을 제공합니다.
-              </span>
+            <span className="chat-header-text">
+              대화 내용을 분석하여 감정 상태를 파악하고, 상황에 맞는 도움을 제공합니다.
+            </span>
             </div>
           </div>
         </header>

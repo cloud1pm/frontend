@@ -1,26 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { Link, useNavigate } from "react-router-dom"; // 👈 Link import 추가
 import "./AuthPage.css";
 
-const SignupPage = () => {
+function SignupPage() {
+  const { signup } = useAuth();
   const navigate = useNavigate();
-  const { signup, login, loading, isAuthenticated, user } = useAuth();
 
   const [form, setForm] = useState({
     email: "",
     password: "",
-    confirmPassword: "",
     nickname: "",
   });
-  const [error, setError] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!loading && isAuthenticated) {
-      navigate(user?.isOnboarded ? "/chat" : "/onboarding", { replace: true });
-    }
-  }, [loading, isAuthenticated, user, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,135 +20,74 @@ const SignupPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-
-    if (form.password !== form.confirmPassword) {
-      setError("비밀번호가 일치하지 않습니다.");
-      return;
-    }
-
-    setIsSubmitting(true);
     try {
-      await signup({
-        email: form.email,
-        password: form.password,
-        nickname: form.nickname,
-      });
-      await login({ email: form.email, password: form.password });
-      navigate("/onboarding", { replace: true });
+      await signup(form);
+      alert("회원가입이 완료되었습니다! 로그인해주세요.");
+      navigate("/login"); // 회원가입 → 로그인 이동
     } catch (err) {
-      const message =
-        err?.response?.data?.message ||
-        err?.message ||
-        "회원가입에 실패했습니다.";
-      setError(message);
-    } finally {
-      setIsSubmitting(false);
+      alert(err.message || "회원가입 실패");
     }
   };
 
   return (
-    <div className="auth-card">
-      <div>
-        <h1 className="auth-title">처음 만나서 반가워요!</h1>
-        <p className="auth-subtitle">
-          나만의 정서 케어 동반자, 지금 바로 가입하고 감정 기록을 시작해보세요.
-        </p>
-      </div>
+    <div className="plain-layout">
+      <div className="auth-card">
+        <h2 className="auth-title">회원가입</h2> {/* 👈 h1/h2 태그는 auth-title 클래스 적용 */}
 
-      {error && <div className="auth-error">{error}</div>}
+        {/* 👇 [수정] 
+          LoginPage.jsx와 동일한 form 구조 (auth-field, auth-label, auth-input)
+        */}
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="auth-field">
+            <label className="auth-label">이메일</label>
+            <input
+              type="email"
+              name="email"
+              className="auth-input"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="signup-email">
-            이메일
-          </label>
-          <input
-            id="signup-email"
-            name="email"
-            type="email"
-            className="auth-input"
-            placeholder="you@example.com"
-            value={form.email}
-            onChange={handleChange}
-            autoComplete="email"
-            required
-          />
+          <div className="auth-field">
+            <label className="auth-label">비밀번호</label>
+            <input
+              type="password"
+              name="password"
+              className="auth-input"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="auth-field">
+            <label className="auth-label">캐릭터 닉네임</label>
+            <input
+              type="text"
+              name="nickname"
+              className="auth-input"
+              value={form.nickname}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {/* 👈 [수정] className="auth-btn" -> "auth-submit" */}
+          <button type="submit" className="auth-submit">
+            가입하기
+          </button>
+        </form>
+
+        {/* 👈 [추가] 로그인 페이지로 돌아가기 링크 */}
+        <div className="auth-footer">
+          이미 계정이 있나요? <Link to="/login" className="auth-link">로그인</Link>
         </div>
 
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="signup-nickname">
-            닉네임 (선택)
-          </label>
-          <input
-            id="signup-nickname"
-            name="nickname"
-            type="text"
-            className="auth-input"
-            placeholder="나를 표현할 닉네임"
-            value={form.nickname}
-            onChange={handleChange}
-            autoComplete="nickname"
-          />
-          <span className="auth-hint">
-            닉네임을 입력하지 않으면 이메일 앞부분이 사용됩니다.
-          </span>
-        </div>
-
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="signup-password">
-            비밀번호
-          </label>
-          <input
-            id="signup-password"
-            name="password"
-            type="password"
-            className="auth-input"
-            placeholder="8자 이상 입력해주세요"
-            value={form.password}
-            onChange={handleChange}
-            autoComplete="new-password"
-            required
-          />
-        </div>
-
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="signup-confirm">
-            비밀번호 확인
-          </label>
-          <input
-            id="signup-confirm"
-            name="confirmPassword"
-            type="password"
-            className="auth-input"
-            placeholder="비밀번호를 한 번 더 입력하세요"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            autoComplete="new-password"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="auth-submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "가입 중..." : "회원가입"}
-        </button>
-      </form>
-
-      <div className="auth-footer">
-        이미 계정이 있다면?
-        <Link to="/login" className="auth-link">
-          로그인
-        </Link>
       </div>
     </div>
   );
-};
+}
 
 export default SignupPage;
-
-
-

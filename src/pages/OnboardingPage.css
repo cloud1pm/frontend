@@ -32,7 +32,10 @@
 
 .activity-btn.selected {
   background: #e8f0ff;
-  border-color: #5a75f9;
+  
+  /* [수정 전] border-color: #5a75f9; */
+  border: 1px solid #5a75f9; /* 👈 [수정] border 속성으로 통일 */
+
   font-weight: bold;
 }
 
@@ -71,47 +74,10 @@
 }
 
 .selected-list li {
-  background: #f8f8fc;
-  border-radius: 6px;
-  padding: 8px 10px;
-  margin-bottom: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.remove-btn {
-  border: none;
-  background: none;
-  color: #d9534f;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.empty {
-  color: #999;
+  background: #f4f4f4;
+  padding: 8px 12px;
+  border-radius: 15px;
+  display: inline-block;
+  margin: 4px;
   font-size: 0.9rem;
-}
-
-.nav-buttons {
-  margin-top: 2rem;
-  display: flex;
-  justify-content: space-between;
-}
-
-.prev-btn,
-.next-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.prev-btn {
-  background: #f1f1f1;
-}
-
-.next-btn {
-  background: #6c63ff;
-  color: white;
 }
