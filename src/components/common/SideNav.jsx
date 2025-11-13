@@ -1,22 +1,61 @@
-import { NavLink } from 'react-router-dom'
+import React from "react";
+import { NavLink } from "react-router-dom";
+import "./SideNav.css";
 
-const SideNav = () => {
-  const linkStyle = (isActive) => ({
-    display:'block',
-    padding:'10px 14px',
-    borderRadius:8,
-    background: isActive ? '#E9E2FF' : 'transparent',
-    color: isActive ? '#6B37FF' : '#444',
-    textDecoration:'none'
-  })
+export default function SideNav({ user, onLogout }) {
+  const navLinkClass = ({ isActive }) => (isActive ? "active" : "");
+
+  const displayName =
+    user?.nickname ||
+    user?.username ||
+    user?.email ||
+    "사용자";
+  const profileImage = user?.profileImage || user?.avatarUrl || null;
+
   return (
-    <aside style={{ width:220, padding:16, borderRight:'1px solid #eee', background:'#fafafa' }}>
-      <NavLink to="/chat" style={({isActive})=>linkStyle(isActive)}>채팅</NavLink>
-      <NavLink to="/report" style={({isActive})=>linkStyle(isActive)}>감정 리포트</NavLink>
-      <NavLink to="/community" style={({isActive})=>linkStyle(isActive)}>커뮤니티</NavLink>
-      <NavLink to="/character" style={({isActive})=>linkStyle(isActive)}>캐릭터</NavLink>
-    </aside>
-  )
-}
+    <aside className="side-nav">
+      <div className="profile">
+        <div className="profile-pic">
+          {profileImage ? (
+            <img src={profileImage} alt={displayName} />
+          ) : (
+            <div className="profile-pic-placeholder">
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </div>
+        <span className="username">{displayName}</span>
+      </div>
+      <nav>
+        <ul>
+          <li>
+            <NavLink to="/chat" className={navLinkClass}>
+              채팅
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/report" className={navLinkClass}>
+              감정 리포트
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/community" className={navLinkClass}>
+              커뮤니티
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/character" className={navLinkClass}>
+              캐릭터
+            </NavLink>
+          </li>
+        </ul>
+      </nav>
 
-export default SideNav
+      {onLogout && (
+        <button className="side-nav-logout" onClick={onLogout}>
+          로그아웃
+        </button>
+      )}
+    </aside>
+  );
+}

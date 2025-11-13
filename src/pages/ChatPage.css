@@ -1,0 +1,67 @@
+/* 채팅 메인 영역 */
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+/* 상단 헤더 바 */
+.chat-header {
+  background: white;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+}
+
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chat-header-icon {
+  width: 20px;
+  height: 20px;
+  color: #8b5cf6;
+}
+
+.chat-header-text {
+  font-size: 15px;
+  color: #666;
+}
+
+.chat-header-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-header-greeting {
+  font-size: 18px;
+  font-weight: 600;
+  color: #4c1d95;
+}
+
+.chat-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-error {
+  margin: 12px auto 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 14px;
+  max-width: 720px;
+  text-align: center;
+}
