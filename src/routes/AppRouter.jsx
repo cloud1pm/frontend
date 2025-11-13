@@ -7,9 +7,9 @@ import {
   useLocation,
 } from "react-router-dom";
 import "../styles.css";
-
 // Common Components
 import SideNav from "../components/common/SideNav";
+import LandingPage from "../pages/LandingPage";
 
 // Pages
 import ChatPage from "../pages/ChatPage";
@@ -39,7 +39,7 @@ const RequireOnboarded = ({ children }) => {
    메인 레이아웃 (SideNav 숨김 처리)
 ---------------------------------------------- */
 
-const NO_SIDENAV_ROUTES = ["/login", "/signup", "/onboarding"];
+const NO_SIDENAV_ROUTES = ["/", "/login", "/signup", "/onboarding"];
 
 const LayoutWrapper = ({ children }) => {
   const location = useLocation();
@@ -61,6 +61,7 @@ const LayoutWrapper = ({ children }) => {
 
 const AppRoutes = () => (
   <Routes>
+   <Route path="/" element={<LandingPage />} />
     {/* 로그인 페이지 */}
     <Route path="/login" element={<LoginPage />} />
 
@@ -126,8 +127,8 @@ const AppRoutes = () => (
     />
 
     {/* 기본 라우팅 */}
-    <Route path="/" element={<Navigate to="/chat" replace />} />
-    <Route path="*" element={<Navigate to="/chat" replace />} />
+    <Route path="/" element={<Navigate to="/login" replace />} />
+    <Route path="*" element={<Navigate to="/login" replace />} />
   </Routes>
 );
 
