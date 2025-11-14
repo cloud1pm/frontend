@@ -118,7 +118,7 @@ export const saveEncouragement = async ({ userId = "guest", message }) => {
 /**
  * GET /api/user/encouragement
  * Response: [
- *   { "id": 1, "message": "오늘도 수고했어요!", "createdAt": "2025-01-01T10:00:00Z" },
+ *   {  "message": "오늘도 수고했어요!" },
  *   ...
  * ]
  */
