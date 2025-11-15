@@ -1,9 +1,8 @@
-/* src/components/chat/ChatSidebar.css */
-
+/* 열린 사이드바 */
 .chat-sidebar {
   width: 280px;
   min-width: 280px;
-  height: 100%;
+  height: 100vh;
   background: white;
   border-right: 1px solid #e5e5e5;
   display: flex;
@@ -11,31 +10,71 @@
   flex-shrink: 0;
 }
 
+/* 닫힌 상태 — 열기 버튼만 보임 */
+.chat-sidebar-collapsed {
+  width: 42px;
+  min-width: 42px;
+  height: 100vh;
+  background: white;
+  border-right: 1px solid #e5e5e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 /* 헤더 */
 .chat-sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 16px;
   border-bottom: 1px solid #e5e5e5;
 }
 
 .chat-sidebar-new-btn {
-  width: 100%;
-  padding: 12px;
+  flex: 0.2;
+  padding: 5px;
   background: #8b5cf6;
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: background 0.2s;
 }
 
 .chat-sidebar-new-btn:hover {
   background: #7c3aed;
+}
+
+/* 닫기 버튼 */
+.chat-sidebar-collapse-btn {
+  margin-left: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  color: #666;
+}
+
+.chat-sidebar-collapse-btn:hover {
+  background: #f3f0ff;
+  color: #8b5cf6;
+}
+
+/* 응원하기 버튼 */
+.chat-sidebar-encourage-btn {
+  width: 90%;
+  margin: 12px auto 0;
+  padding: 12px;
+  background: #ede9fe;
+  color: #6d28d9;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 /* 채팅 목록 */
@@ -45,30 +84,14 @@
   padding: 8px;
 }
 
-.chat-sidebar-empty {
-  padding: 32px 16px;
-  text-align: center;
-  color: #9ca3af;
-}
-
-.chat-sidebar-empty svg {
-  margin: 0 auto 12px;
-}
-
-.chat-sidebar-empty p {
-  font-size: 14px;
-  margin: 0;
-}
-
-/* 채팅 아이템 */
 .chat-sidebar-item {
   padding: 12px;
-  margin-bottom: 4px;
-  border-radius: 8px;
-  cursor: pointer;
-  background: transparent;
+  margin-bottom: 6px;
+  border-radius: 10px;
   border: 1px solid transparent;
-  transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
 }
 
 .chat-sidebar-item:hover {
@@ -80,24 +103,46 @@
   border: 1px solid #8b5cf6;
 }
 
-.chat-sidebar-item-content {
-  flex: 1;
-  margin-bottom: 8px;
-}
-
 .chat-sidebar-item-title {
   font-size: 14px;
   font-weight: 500;
-  color: #1f2937;
-  margin-bottom: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: #333;
 }
 
 .chat-sidebar-item-date {
   font-size: 12px;
-  color: #9ca3af;
+  color: #999;
+}
+
+/* 수정 모드 */
+.chat-sidebar-edit-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.chat-sidebar-edit-input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #8b5cf6;
+  border-radius: 6px;
+}
+
+.chat-sidebar-edit-save,
+.chat-sidebar-edit-cancel {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.chat-sidebar-edit-save {
+  color: #10b981;
+}
+
+.chat-sidebar-edit-cancel {
+  color: #ef4444;
 }
 
 .chat-sidebar-item-actions {
@@ -106,70 +151,15 @@
 }
 
 .chat-sidebar-action-btn {
-  padding: 6px;
   background: transparent;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #ddd;
   border-radius: 6px;
+  padding: 6px;
   cursor: pointer;
-  color: #6b7280;
-  display: flex;
-  align-items: center;
-  transition: all 0.2s;
-}
-
-.chat-sidebar-action-btn:hover {
-  border-color: #8b5cf6;
-  color: #8b5cf6;
+  color: #666;
 }
 
 .chat-sidebar-action-btn.delete:hover {
-  border-color: #ef4444;
   color: #ef4444;
-}
-
-/* 편집 폼 */
-.chat-sidebar-edit-form {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.chat-sidebar-edit-input {
-  flex: 1;
-  padding: 4px 8px;
-  border: 1px solid #8b5cf6;
-  border-radius: 4px;
-  font-size: 13px;
-  outline: none;
-}
-
-.chat-sidebar-edit-save,
-.chat-sidebar-edit-cancel {
-  padding: 4px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.chat-sidebar-edit-save {
-  color: #10b981;
-}
-
-.chat-sidebar-encourage-btn {
-  width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  background: #ede9fe; /* 매우 옅은 보라 */
-  color: #6d28d9;       /* 보라 텍스트 */
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.chat-sidebar-encourage-btn:hover {
-  background: #e2d9ff;
-  border-color: #c4b5fd;
+  border-color: #ef4444;
 }

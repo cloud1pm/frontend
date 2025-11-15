@@ -231,16 +231,17 @@ export default function ChatPage() {
   return (
     <div className="chat-page-container">
       {/* 채팅 사이드바 */}
-      {sidebarOpen && (
       <ChatSidebar
-        sessions={sessions}
-        currentSessionId={currentSessionId}
-        onSelectSession={handleSelectSession}
-        onCreateSession={handleCreateSession}
-        onDeleteSession={handleDeleteSession}
-        onUpdateTitle={handleUpdateTitle}
-      />
-      )}
+      sessions={sessions}
+      currentSessionId={currentSessionId}
+      onSelectSession={handleSelectSession}
+      onCreateSession={handleCreateSession}
+      onDeleteSession={handleDeleteSession}
+      onUpdateTitle={handleUpdateTitle}
+      sidebarOpen={sidebarOpen}
+      onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+    />
+
       {/* 메인 채팅 영역 */}
       <div className="layout chat-page">
         <main className="chat-main">
@@ -255,12 +256,7 @@ export default function ChatPage() {
                   대화 내용을 분석하여 감정 상태를 파악하고, 상황에 맞는 도움을 제공합니다.
                 </span>
               </div>
-               <button 
-            className="sidebar-toggle-btn"
-            onClick={() => setSidebarOpen(prev => !prev)}
-            >
-              {sidebarOpen ? "채팅목록닫기" : "채팅목록열기"}
-          </button>
+             
             </div>
 
           </header>
