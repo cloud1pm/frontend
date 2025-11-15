@@ -2,11 +2,13 @@
 import React, { useState } from "react";
 import { userAPI } from "../api/userApi";
 import "./EncouragementPage.css";
+import { useNavigate } from "react-router-dom";
 
 export default function EncouragementPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const recommended = [
     "힘든 시간도 지나갈거야",
@@ -67,14 +69,24 @@ export default function EncouragementPage() {
           </button>
         ))}
       </div>
+    
+  <div className="btn-row">
+  <button
+    className="sub-btn"
+    onClick={() => navigate("/chat")}
+  >
+    나중에 할게요
+  </button>
 
-      <button
-        className="submit-btn"
-        onClick={handleSubmit}
-        disabled={loading}
-      >
-        확인 (밥 +1 🍚)
-      </button>
+  <button
+    className="main-btn"
+    onClick={handleSubmit}
+    disabled={loading}
+  >
+    확인 (밥 +1 🍚)
+  </button>
+</div>
+
 
       {success && (
         <div className="success-text">응원 메시지가 저장되었어요!</div>

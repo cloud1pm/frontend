@@ -155,6 +155,21 @@
   color: #10b981;
 }
 
-.chat-sidebar-edit-cancel {
-  color: #ef4444;
+.chat-sidebar-encourage-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  background: #ede9fe; /* 매우 옅은 보라 */
+  color: #6d28d9;       /* 보라 텍스트 */
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.chat-sidebar-encourage-btn:hover {
+  background: #e2d9ff;
+  border-color: #c4b5fd;
 }

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FiInfo } from "react-icons/fi";
+import { useNavigate } from "react-router-dom"; // 👈 1. useNavigate import
 import ChatWindow from "../components/chat/ChatWindow";
 import MessageInput from "../components/chat/MessageInput";
 import ChatSidebar from "../components/chat/ChatSidebar";
@@ -17,8 +18,11 @@ export default function ChatPage() {
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const scrollerRef = useRef(null);
   const { user } = useAuth();
+  const navigate = useNavigate(); // 👈 2. useNavigate 훅 사용
 
   const displayName =
     user?.nickname ||
@@ -227,6 +231,7 @@ export default function ChatPage() {
   return (
     <div className="chat-page-container">
       {/* 채팅 사이드바 */}
+      {sidebarOpen && (
       <ChatSidebar
         sessions={sessions}
         currentSessionId={currentSessionId}
@@ -235,7 +240,7 @@ export default function ChatPage() {
         onDeleteSession={handleDeleteSession}
         onUpdateTitle={handleUpdateTitle}
       />
-
+      )}
       {/* 메인 채팅 영역 */}
       <div className="layout chat-page">
         <main className="chat-main">
@@ -250,7 +255,14 @@ export default function ChatPage() {
                   대화 내용을 분석하여 감정 상태를 파악하고, 상황에 맞는 도움을 제공합니다.
                 </span>
               </div>
+               <button 
+            className="sidebar-toggle-btn"
+            onClick={() => setSidebarOpen(prev => !prev)}
+            >
+              {sidebarOpen ? "채팅목록닫기" : "채팅목록열기"}
+          </button>
             </div>
+
           </header>
 
           <div className="chat-center">

@@ -11,6 +11,11 @@ import { getStoredSession } from "./authApi";
 /* ===========================
  *  Mock용 유틸
  * =========================== */
+const getUserKey = (base) => {
+  const session = getStoredSession();
+  const userId = session?.user?.id || "guest";
+  return `${base}_${userId}`;
+};
 
 const CHAT_SESSIONS_KEY = getUserKey("mockChatSessions");
 const CHAT_MESSAGES_KEY = getUserKey("mockChatMessages"); // { [sessionId]: ChatMessage[] }
@@ -23,11 +28,7 @@ const writeMock = (key, value) =>
 
 const nowIso = () => new Date().toISOString();
 
-const getUserKey = (base) => {
-  const session = getStoredSession();
-  const userId = session?.user?.id || "guest";
-  return `${base}_${userId}`;
-};
+
 
 
 /* ===========================

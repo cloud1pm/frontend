@@ -21,6 +21,7 @@ import CommunityPage from "../pages/CommunityPage";
 import PostEditorPage from "../pages/PostEditorPage";
 import CommunityPostPage from "../pages/CommunityPostPage";
 import CharacterPage from "../pages/CharacterPage";
+import EncouragementPage from "../pages/EncouragementPage"; // 👈 1. import 추가
 import { useAuth } from "../context/AuthContext";
 
 import "../pages/AuthPage.css";
@@ -43,7 +44,8 @@ const RequireOnboarded = ({ children }) => {
    메인 레이아웃 (SideNav 숨김 처리)
 ---------------------------------------------- */
 
-const NO_SIDENAV_ROUTES = ["/", "/login", "/signup", "/onboarding"];
+// 👇 2. /encouragement 도 사이드바 숨김 처리
+const NO_SIDENAV_ROUTES = ["/", "/login", "/signup", "/onboarding", "/encouragement"];
 
 const LayoutWrapper = ({ children }) => {
   const location = useLocation();
@@ -147,6 +149,18 @@ const AppRoutes = () => (
         <RequireAuth>
           <RequireOnboarded>
             <CharacterPage />
+          </RequireOnboarded>
+        </RequireAuth>
+      }
+    />
+
+    {/* 👇 3. [추가] 오늘의 응원 페이지 라우트 */}
+    <Route
+      path="/encouragement"
+      element={
+        <RequireAuth>
+          <RequireOnboarded>
+            <EncouragementPage />
           </RequireOnboarded>
         </RequireAuth>
       }

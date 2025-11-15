@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { FiPlus, FiTrash2, FiEdit2, FiCheck, FiX, FiMessageSquare } from 'react-icons/fi';
 import './ChatSidebar.css';
+import {useNavigate} from "react-router-dom";
+
 
 export default function ChatSidebar({ 
   sessions, 
@@ -11,9 +13,10 @@ export default function ChatSidebar({
   onDeleteSession,
   onUpdateTitle 
 }) {
+  const [sidbarOpen ,  setSidebarOpen] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
-
+  const navigate = useNavigate();
   const handleStartEdit = (session) => {
     setEditingId(session.sessionId);
     setEditTitle(session.title);
@@ -54,8 +57,16 @@ export default function ChatSidebar({
         <button className="chat-sidebar-new-btn" onClick={onCreateSession}>
           <FiPlus size={18} />
           새 채팅 시작
+        </button>   
+          <button 
+          className="chat-sidebar-encourage-btn"
+          onClick={() => navigate("/encouragement")}
+        >
+          오늘의 응원하러가기 (밥 +1 🍚)
         </button>
       </div>
+
+
 
       {/* 채팅 목록 */}
       <div className="chat-sidebar-list">
