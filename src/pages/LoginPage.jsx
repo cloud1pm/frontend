@@ -48,32 +48,25 @@ const LoginPage = () => {
         navigate("/chat", { replace: true });
       }
     } catch (err) {
-      console.error("❌ [LoginPage] 로그인 실패:", err);
-      
-      // 에러 메시지 상세화
-      let errorMessage = "로그인 실패";
-      
-      if (err.response) {
-        // 백엔드에서 응답이 온 경우
-        console.error("백엔드 응답 에러:", err.response);
-        errorMessage = err.response.data?.message || 
-                      err.response.data?.error || 
-                      `서버 오류 (${err.response.status})`;
-      } else if (err.request) {
-        // 요청은 보냈지만 응답이 없는 경우
-        console.error("응답 없음:", err.request);
-        errorMessage = "서버와 연결할 수 없습니다.";
-      } else {
-        // 요청 설정 중 에러
-        console.error("요청 설정 에러:", err.message);
-        errorMessage = err.message || "알 수 없는 오류";
-      }
-      
-      setError(errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  console.error("❌ [LoginPage] 로그인 실패:", err);
+
+  let backendMsg =
+    err.response?.data?.message ||
+    err.response?.data?.error ||
+    err.message ||
+    "";
+
+  // 정확한 조건 처리
+  let errorMessage = "잘못된 유저네임 또는 비밀번호입니다.";
+
+  // 서버 연결 문제일 때만 별도 처리
+  if (err.request && !err.response) {
+    errorMessage = "서버와 연결할 수 없습니다.";
+  }
+
+  setError(errorMessage);
+} 
+}
 
   const handleGoogleSuccess = async (credentialResponse) => {
     console.log("🔵 [LoginPage] 구글 로그인 시도");

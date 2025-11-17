@@ -140,7 +140,7 @@ export const signup = async (payload) => {
       id: Date.now(),
       email: payload.email,
       username: payload.username,
-      nickname: payload.nickname || payload.email.split("@")[0],
+      nickname: payload.nickname ,
       password: payload.password,
       isOnboarded: true, // riskSolutions 포함하므로 온보딩 완료
     };

@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo, useState, useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { communityAPI } from "../api/communityApi";
 import "./PostEditorPage.css";
 
@@ -7,12 +7,25 @@ const EMOTIONS = ["😊 기쁨", "😢 슬픔", "😡 분노", "😨 불안", "�
 
 const PostEditorPage = () => {
   const navigate = useNavigate();
+  const { postId } = useParams();
+  const location = useLocation();
+  const isEditMode = !!postId;
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [selectedEmotion, setSelectedEmotion] = useState(null);
   const [uploadFile, setUploadFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // 수정 모드일 때 기존 데이터 로드
+  useEffect(() => {
+    if (isEditMode && location.state?.post) {
+      const { post } = location.state;
+      setTitle(post.title || "");
+      setContent(post.content || "");
+      setSelectedEmotion(post.emotion || null);
+    }
+  }, [isEditMode, location.state]);
 
   const isSubmitDisabled = useMemo(
     () => submitting || title.trim().length === 0 || content.trim().length === 0,
@@ -38,12 +51,24 @@ const PostEditorPage = () => {
         image: uploadFile,
       };
 
-      await communityAPI.createPost(payload);
-      alert("게시글이 등록되었습니다!");
-      navigate("/community");
+      if (isEditMode) {
+        // 수정 모드
+        const response = await communityAPI.updatePost(postId, payload);
+        if (response?.success) {
+          alert("게시글이 수정되었습니다!");
+          navigate(`/community/post/${postId}`, { state: { refresh: true } });
+        }
+      } else {
+        // 작성 모드
+        const response = await communityAPI.createPost(payload);
+        if (response?.success) {
+          alert("게시글이 등록되었습니다! 밥 1개를 획득했습니다 🍚");
+          navigate("/community", { state: { refresh: true } });
+        }
+      }
     } catch (error) {
       console.error(error);
-      alert("게시글 등록에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      alert(`게시글 ${isEditMode ? '수정' : '등록'}에 실패했습니다. 잠시 후 다시 시도해주세요.`);
     } finally {
       setSubmitting(false);
     }
@@ -61,16 +86,7 @@ const PostEditorPage = () => {
             ← 돌아가기
           </button>
 
-          <h2>게시글 작성하기</h2>
-
-          <div className="post-editor-page__nickname">
-            <strong>❄️ 눈송이</strong>
-            <span>닉네임이 표시됩니다</span>
-            <label className="post-editor-page__toggle">
-              <input type="checkbox" defaultChecked />
-              <span className="post-editor-page__toggle-pill" />
-            </label>
-          </div>
+          <h2>{isEditMode ? "게시글 수정하기" : "게시글 작성하기"}</h2>
         </header>
 
         <div className="post-editor-page__body">
@@ -110,19 +126,13 @@ const PostEditorPage = () => {
 
           <div className="post-editor-form">
             <div className="post-editor-toolbar">
-              <button type="button">파일</button>
-              <button type="button">서식</button>
-              <button type="button">사진 첨부하기</button>
-              <button type="button" onClick={handleReset}>
-                모두 지우기
-              </button>
               <button
                 type="button"
                 className="post-editor-toolbar__submit"
                 onClick={handleSubmit}
                 disabled={isSubmitDisabled}
               >
-                {submitting ? "등록 중..." : "등록하기"}
+                {submitting ? (isEditMode ? "수정 중..." : "등록 중...") : (isEditMode ? "수정하기" : "등록하기")}
               </button>
             </div>
 
@@ -136,22 +146,6 @@ const PostEditorPage = () => {
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
               />
-
-              <div className="post-editor-upload">
-                <span>사진 첨부</span>
-                {uploadFile ? (
-                  <span>{uploadFile.name}</span>
-                ) : (
-                  <span className="post-editor-upload__placeholder">
-                    이미지를 업로드해주세요.
-                  </span>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => setUploadFile(event.target.files?.[0] ?? null)}
-                />
-              </div>
 
               <label htmlFor="post-editor-content">내용</label>
               <textarea
@@ -170,4 +164,3 @@ const PostEditorPage = () => {
 };
 
 export default PostEditorPage;
-
