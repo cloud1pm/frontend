@@ -1,98 +1,231 @@
-import { axiosInstance } from "./axiosInstance";
+// src/api/chatApi.js
+import axiosInstance from "./axiosInstance";
 import { USE_MOCK_API, mockResponse } from "./config";
+import { getStoredSession } from "./authApi";
 
-/**
- * Chat 관련 API 래퍼.
- * - mock 모드: 프론트 단에서 임의 응답 생성 (MOCK)
- * - 실제 연동: 백엔드의 /api/chat/message, /api/chat/emotion-trend 엔드포인트 호출
- */
-
-/* -------------------------------------------------------
- *  MOCK DATA — 임시 봇 응답 키워드 매칭 리스트
- * ------------------------------------------------------- */
-const BOT_RESPONSES = [
-  { match: ["행복", "좋아", "기쁘"], reply: "정말 행복하시겠어요!" },
-  { match: ["우울", "힘들", "지쳐"], reply: "많이 힘드셨죠. 잠시 쉬어가도 괜찮아요." },
-  { match: ["공부", "과제", "시험"], reply: "공부하느라 수고 많았어요. 잠깐 휴식을 가져보는 건 어떨까요?" },
-];
-
-/* -------------------------------------------------------
- *  MOCK DATA — 감정 트렌드 랜덤 생성 함수
- * ------------------------------------------------------- */
-const buildMockEmotionTrend = (days) =>
-  Array.from({ length: days }, (_, idx) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (days - idx - 1));
-    const avgScore = (Math.random() * 0.4 + 0.4).toFixed(2); // 0.40–0.80 랜덤 생성 (임시)
-
-    return {
-      date: date.toISOString(),
-      averageSentimentScore: Number(avgScore),
-    };
-  });
-
-/* -------------------------------------------------------
- *  MOCK LOGIC — 사용자 메시지에 따라 임시 응답 생성
- * ------------------------------------------------------- */
-const getMockReply = (message) => {
-  const lower = message.toLowerCase();
-  const matched = BOT_RESPONSES.find((pattern) =>
-    pattern.match.some((keyword) => lower.includes(keyword))
-  );
-  return matched?.reply ?? "그렇군요! 조금 더 이야기해주실 수 있을까요?";
+/* ===========================
+ *  Mock용 유틸
+ * =========================== */
+const getUserKey = (base) => {
+  const session = getStoredSession();
+  const userId = session?.user?.id || "guest";
+  return `${base}_${userId}`;
 };
 
-/**
- * GET /api/chat/emotion-trend
- * 실제 연동 시: 백엔드 JSON 그대로 반환
- */
+const CHAT_SESSIONS_KEY = getUserKey("mockChatSessions");
+const CHAT_MESSAGES_KEY = getUserKey("mockChatMessages");
+
+const readMock = (key, fallback) =>
+  JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+
+const writeMock = (key, value) =>
+  localStorage.setItem(key, JSON.stringify(value));
+
+const nowIso = () => new Date().toISOString();
+
+/* ===========================
+ *  1. 단일 메시지 분석
+ * =========================== */
+export const sendQuickMessage = async (message) => {
+  if (USE_MOCK_API) {
+    const lower = message.toLowerCase();
+    let sentiment = "neutral";
+    let riskLevel = 1;
+
+    if (lower.includes("힘들") || lower.includes("우울") || lower.includes("죽고")) {
+      sentiment = "negative";
+      riskLevel = 3;
+    } else if (lower.includes("행복") || lower.includes("좋아") || lower.includes("기뻐")) {
+      sentiment = "positive";
+      riskLevel = 1;
+    }
+
+    return mockResponse({
+      message: "안녕하세요, 오늘도 수고 많으셨어요. 무슨 일이 있었나요?",
+      sentiment,
+      riskLevel,
+    });
+  }
+
+  // ⭐ 백엔드 경로 확인 필요 (예: /chat/message)
+  const { data } = await axiosInstance.post("/chat/message", { message });
+  return data;
+};
+
+/* ===========================
+ *  2. 감정 트렌드
+ * =========================== */
 export const getEmotionTrend = async (days = 7) => {
   if (USE_MOCK_API) {
-    /* -------------------------------------------------------
-     *  MOCK RESPONSE — trends 형식으로 감싼 목업 데이터 반환
-     * ------------------------------------------------------- */
+    const sentiments = ["negative", "neutral", "positive"];
+    const trends = Array.from({ length: days }, (_, idx) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (days - 1 - idx));
+      return {
+        date: d.toISOString().slice(0, 10),
+        sentiment: sentiments[Math.floor(Math.random() * sentiments.length)],
+        averageScore: Number((Math.random() * 2 - 1).toFixed(2)),
+      };
+    });
+
+    return mockResponse({ trends });
+  }
+
+  // ⭐ 백엔드 경로 확인 필요 (예: /chat/emotion-trend)
+  const { data } = await axiosInstance.get("/chat/emotion-trend", {
+    params: { days },
+  });
+  return data;
+};
+
+/* ===========================
+ *  3. 채팅 세션 관리
+ * =========================== */
+const createSession = async (title) => {
+  if (USE_MOCK_API) {
+    const sessions = readMock(CHAT_SESSIONS_KEY, []);
+    const newId = Date.now();
+    const updatedAt = nowIso();
+
+    const session = { sessionId: newId, title, updatedAt };
+    const next = [session, ...sessions];
+    writeMock(CHAT_SESSIONS_KEY, next);
+
+    return mockResponse(session);
+  }
+
+  // ⭐ 백엔드 경로 확인 필요 (예: /chat/sessions)
+  const { data } = await axiosInstance.post("/chat/sessions", { title });
+  return data;
+};
+
+const getSessions = async () => {
+  if (USE_MOCK_API) {
+    const sessions = readMock(CHAT_SESSIONS_KEY, []);
+    sessions.sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+    return mockResponse(sessions);
+  }
+
+  // ⭐ 백엔드 경로 확인 필요 (예: /chat/sessions)
+  const { data } = await axiosInstance.get("/chat/sessions");
+  return data;
+};
+
+const updateSessionTitle = async (sessionId, title) => {
+  if (USE_MOCK_API) {
+    const sessions = readMock(CHAT_SESSIONS_KEY, []);
+    const updatedAt = nowIso();
+    const next = sessions.map((s) =>
+      String(s.sessionId) === String(sessionId)
+        ? { ...s, title, updatedAt }
+        : s
+    );
+    writeMock(CHAT_SESSIONS_KEY, next);
+
     return mockResponse({
-      trends: buildMockEmotionTrend(days),
+      sessionId,
+      title,
+      updatedAt,
     });
   }
 
-  const { data } = await axiosInstance.get("/api/chat/emotion-trend", {
-    params: { days },
-  });
+  // ⭐ 백엔드 경로 확인 필요
+  const { data } = await axiosInstance.put(
+    `/chat/sessions/${sessionId}/title`,
+    { title }
+  );
+  return data;
+};
+
+const deleteSession = async (sessionId) => {
+  if (USE_MOCK_API) {
+    const sessions = readMock(CHAT_SESSIONS_KEY, []);
+    const messagesDb = readMock(CHAT_MESSAGES_KEY, {});
+
+    const nextSessions = sessions.filter(
+      (s) => String(s.sessionId) !== String(sessionId)
+    );
+    delete messagesDb[sessionId];
+
+    writeMock(CHAT_SESSIONS_KEY, nextSessions);
+    writeMock(CHAT_MESSAGES_KEY, messagesDb);
+
+    return mockResponse({ success: true });
+  }
+
+  // ⭐ 백엔드 경로 확인 필요
+  await axiosInstance.delete(`/chat/sessions/${sessionId}`);
+  return { success: true };
+};
+
+/* ===========================
+ *  4. 세션별 메시지
+ * =========================== */
+const getSessionMessages = async (sessionId) => {
+  if (USE_MOCK_API) {
+    const messagesDb = readMock(CHAT_MESSAGES_KEY, {});
+    const list = messagesDb[sessionId] ?? [];
+    return mockResponse(list);
+  }
+
+  // ⭐ 백엔드 경로 확인 필요
+  const { data } = await axiosInstance.get(
+    `/chat/sessions/${sessionId}/messages`
+  );
+  return data;
+};
+
+const sendSessionMessage = async (sessionId, message) => {
+  if (USE_MOCK_API) {
+    const messagesDb = readMock(CHAT_MESSAGES_KEY, {});
+    const existing = messagesDb[sessionId] ?? [];
+
+    const createdAt = nowIso();
+
+    const userMsg = {
+      messageId: Date.now(),
+      message,
+      isUserMessage: true,
+      sentiment: "neutral",
+      createdAt,
+    };
+
+    const botMsg = {
+      messageId: Date.now() + 1,
+      message: "정말 고생 많으셨어요. 조금 더 이야기해 주실 수 있을까요?",
+      isUserMessage: false,
+      sentiment: null,
+      createdAt,
+    };
+
+    const nextList = [...existing, userMsg, botMsg];
+    messagesDb[sessionId] = nextList;
+    writeMock(CHAT_MESSAGES_KEY, messagesDb);
+
+    return mockResponse(botMsg);
+  }
+
+  // ⭐ 백엔드 경로 확인 필요
+  const { data } = await axiosInstance.post(
+    `/chat/message/${sessionId}`,
+    { message }
+  );
 
   return data;
 };
 
-/**
- * POST /api/chat/message
- * 실제 연동 시: 백엔드 응답 반환
- */
-export const sendChatMessage = async ({ message }) => {
-  if (!message) {
-    throw new Error("메시지가 비어있습니다.");
-  }
-
-  if (USE_MOCK_API) {
-    /* -------------------------------------------------------
-     * MOCK RESPONSE — 실제 백엔드 응답 형식을 흉내 내는 목업
-     * ------------------------------------------------------- */
-    const reply = getMockReply(message);
-
-    return mockResponse({
-      reply,
-      sentiment:
-        message.includes("힘들") || message.includes("우울")
-          ? "negative"
-          : message.includes("행복") || message.includes("좋아")
-          ? "positive"
-          : "neutral",
-      riskLevel: message.includes("힘들") ? 3 : 1,
-    });
-  }
-
-  const { data } = await axiosInstance.post("/api/chat/message", {
-    message,
-  });
-
-  return data;
+/* ===========================
+ *  통합 export
+ * =========================== */
+export const chatAPI = {
+  sendQuickMessage,
+  getEmotionTrend,
+  createSession,
+  getSessions,
+  updateSessionTitle,
+  deleteSession,
+  getSessionMessages,
+  sendSessionMessage,
 };

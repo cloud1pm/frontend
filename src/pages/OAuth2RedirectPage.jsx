@@ -1,7 +1,7 @@
 // src/pages/OAuth2RedirectPage.jsx
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { axiosInstance } from "../api/axiosInstance";
+import  axiosInstance  from "../api/axiosInstance";
 
 const OAuth2RedirectPage = () => {
   const navigate = useNavigate();

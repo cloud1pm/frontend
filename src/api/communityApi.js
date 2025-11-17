@@ -1,4 +1,4 @@
-import { axiosInstance } from "../api/axiosInstance";
+import  axiosInstance from "../api/axiosInstance";
 import { USE_MOCK_API, mockResponse } from "./config";
 
 const POSTS_PER_PAGE = 6;
@@ -144,38 +144,10 @@ export const communityAPI = {
       });
     }
 
-    // 백엔드 API 호출
-    let endpoint = "/api/community/posts";
-    
-    if (tab === "my-posts") {
-      endpoint = "/api/community/posts/my";
-    }
-
-    const { data } = await axiosInstance.get(endpoint);
-    
-    // 백엔드 응답을 프론트 형식으로 변환
-    let posts = data.map(formatBackendPost);
-
-    // 프론트엔드에서 정렬 (백엔드가 이미 정렬해주지만, 탭에 따라 추가 정렬)
-    if (tab === "popular") {
-      posts.sort((a, b) => b.likes - a.likes);
-    } else if (tab === "recent") {
-      posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-
-    // 페이지네이션 적용
-    const totalPosts = posts.length;
-    const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
-    const startIndex = (page - 1) * POSTS_PER_PAGE;
-    const endIndex = startIndex + POSTS_PER_PAGE;
-    const paginatedPosts = posts.slice(startIndex, endIndex);
-
-    return {
-      items: paginatedPosts,
-      totalPages: Math.max(1, totalPages),
-      currentPage: page,
-      totalPosts: totalPosts,
-    };
+    const { data } = await axiosInstance.get("/community/posts", {
+      params: { page, tab },
+    });
+    return data;
   },
 
   async getPostById(id) {

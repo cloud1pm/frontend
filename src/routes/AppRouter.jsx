@@ -7,6 +7,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import "../styles.css";
+
 // Common Components
 import SideNav from "../components/common/SideNav";
 import LandingPage from "../pages/LandingPage";
@@ -21,10 +22,12 @@ import CommunityPage from "../pages/CommunityPage";
 import PostEditorPage from "../pages/PostEditorPage";
 import CommunityPostPage from "../pages/CommunityPostPage";
 import CharacterPage from "../pages/CharacterPage";
+import EncouragementPage from "../pages/EncouragementPage"; // 👈 1. import 추가
 import { useAuth } from "../context/AuthContext";
 import OAuth2RedirectPage from "../pages/OAuth2RedirectPage";
 
 import "../pages/AuthPage.css";
+
 // 로그인 필수
 const RequireAuth = ({ children }) => {
  // const { loading, isAuthenticated } = useAuth();
@@ -44,7 +47,8 @@ const RequireOnboarded = ({ children }) => {
    메인 레이아웃 (SideNav 숨김 처리)
 ---------------------------------------------- */
 
-const NO_SIDENAV_ROUTES = ["/", "/login", "/signup", "/onboarding", "/encouragement", "/oauth2/redirect"];
+//  2. /encouragement 도 사이드바 숨김 처리
+const NO_SIDENAV_ROUTES = ["/", "/login", "/signup", "/onboarding", "/encouragement"];
 
 const LayoutWrapper = ({ children }) => {
   const location = useLocation();
@@ -76,14 +80,8 @@ const AppRoutes = () => (
     <Route path="/signup" element={<SignupPage />} />
 
     {/* 온보딩 */}
-    <Route
-      path="/onboarding"
-      element={
-        <RequireAuth>
-          <OnboardingPage />
-        </RequireAuth>
-      }
-    />
+    <Route path="/onboarding" element={<OnboardingPage />} />
+
 
     {/* 채팅 */}
     <Route
@@ -166,14 +164,21 @@ const AppRoutes = () => (
       }
     />
 
-{/*/ ❌ 기존: <Route path="/" element={<LandingPage />} />*/}
-{/*❌ 기존: <Route path="/" element={<Navigate to="/login" replace />} /> */}
+    {/* 👇 3. [추가] 오늘의 응원 페이지 라우트 */}
+    <Route
+      path="/encouragement"
+      element={
+        <RequireAuth>
+          <RequireOnboarded>
+            <EncouragementPage />
+          </RequireOnboarded>
+        </RequireAuth>
+      }
+    />
 
-{/*// ✅ 수정: '/' 경로를 LandingPage로 두거나, 테스트 경로로 연결합니다. */}
-{/*<Route path="/" element={<LandingPage />} /> */}
-
-{/*// 만약 /community로 바로 리다이렉트하고 싶다면: */}
-<Route path="/" element={<Navigate to="/community" replace />} />
+    {/* 기본 라우팅 */}
+    <Route path="/" element={<Navigate to="/login" replace />} />
+    <Route path="*" element={<Navigate to="/login" replace />} />
   </Routes>
 );
 

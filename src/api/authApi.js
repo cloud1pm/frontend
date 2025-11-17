@@ -1,17 +1,20 @@
 // src/api/authApi.js
-import { axiosInstance } from "./axiosInstance";
+
+import axiosInstance from "./axiosInstance";
+import axios from "axios";
 import { USE_MOCK_API, mockResponse, mockError } from "./config";
 
+// ------------------------------
+// Mock Helper
+// ------------------------------
 const USERS_KEY = "mockUsers";
 const TOKEN_KEY = "mockAuthToken";
 
-const readUsers = () =>
-  JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+const readUsers = () => JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+const writeUsers = (users) => localStorage.setItem(USERS_KEY, JSON.stringify(users));
 
-const writeUsers = (users) =>
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-
-const persistSession = ({ token, user }) => {
+export const persistSession = ({ token, user }) => {
+  console.log("🔵 [persistSession] 저장:", { token, user });
   localStorage.setItem(
     TOKEN_KEY,
     JSON.stringify({ token, user, timestamp: Date.now() })
@@ -21,170 +24,246 @@ const persistSession = ({ token, user }) => {
 
 export const getStoredSession = () => {
   try {
-    return JSON.parse(localStorage.getItem(TOKEN_KEY));
+    const stored = JSON.parse(localStorage.getItem(TOKEN_KEY));
+    console.log("🔵 [getStoredSession] 불러오기:", stored);
+    return stored;
   } catch {
+    console.warn("⚠️ [getStoredSession] 파싱 실패");
     return null;
   }
 };
 
 export const clearStoredSession = () => {
+  console.log("🔵 [clearStoredSession] 세션 삭제");
   localStorage.removeItem(TOKEN_KEY);
 };
 
-// 로그인
-export const login = async ({ email, password }) => {
-  if (USE_MOCK_API) {
-    const users = readUsers();
-    const user = users.find((u) => u.email === email && u.password === password);
+// ------------------------------
+// 인증 비필요 전용 axios
+// ------------------------------
+const authAxios = axios.create({
+  baseURL: "http://localhost:8080",
+  withCredentials: true,
+  timeout: 10000,
+});
 
-    if (!user) return mockError(new Error("이메일 또는 비밀번호가 올바르지 않습니다."), 200);
+// 응답 인터셉터 추가
+authAxios.interceptors.response.use(
+  (response) => {
+    console.log("✅ [authAxios] 응답 성공:", response.data);
+    return response;
+  },
+  (error) => {
+    console.error("❌ [authAxios] 응답 에러:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    return Promise.reject(error);
+  }
+);
 
-    const session = {
-      token: `mock-token-${user.id}`,
-      user: { ...user, password: undefined }
+// ------------------------------
+// ⭐ 로그인
+// ------------------------------
+export const login = async ({ username, password }) => {
+  console.log("🔵 [login API] 요청:", { username, password: "***" });
+
+  try {
+    const { data } = await authAxios.post("/api/user/login", {
+      username,
+      password,
+    });
+
+    console.log("✅ [login API] 응답:", data);
+
+    // 백엔드 응답 구조 확인
+    if (!data) {
+      throw new Error("응답 데이터가 없습니다.");
+    }
+
+    // 백엔드가 { token, userId } 형태로 응답
+    const result = {
+      token: data.token || data.accessToken,
+      user: {
+        id: data.userId,
+        username: username, // 요청에서 사용한 username 재사용
+        isOnboarded: true, // 로그인 성공 = 온보딩 완료
+      },
     };
 
-    return mockResponse(persistSession(session));
-  }
+    console.log("✅ [login API] 정규화된 결과:", result);
 
-  // 백엔드 API: POST /api/user/login
-  // 요청: { username, password }
-  // 응답: { token, userId }
-  const { data } = await axiosInstance.post("/api/user/login", { 
-    username: email.split('@')[0], // username으로 변환
-    password 
-  });
-
-  // 사용자 정보 가져오기
-  const userProfile = await axiosInstance.get("/api/user");
-  
-  const session = {
-    token: data.token,
-    user: {
-      id: userProfile.data.id,
-      email: userProfile.data.email,
-      nickname: userProfile.data.nickname,
-      profileImageUrl: userProfile.data.profileImageUrl,
-      isOnboarded: userProfile.data.hasCompletedInitialSetup,
-      provider: userProfile.data.provider
+    if (!result.token) {
+      console.error("❌ [login API] 토큰 없음. 원본 응답:", data);
+      throw new Error("토큰을 받지 못했습니다.");
     }
-  };
 
-  persistSession(session);
-  return session;
+    return result;
+  } catch (error) {
+    console.error("❌ [login API] 오류:", error.response?.data || error.message);
+    
+    // 에러를 그대로 throw하여 상위에서 처리
+    throw error;
+  }
 };
 
-// 회원가입
-export const signup = async ({ email, password, nickname, riskSolutions }) => {
+// ------------------------------
+// ⭐ 현재 사용자 정보 가져오기 (선택적)
+// ------------------------------
+export const getCurrentUser = async () => {
+  console.log("🔵 [getCurrentUser API] 요청");
+
+  try {
+    const { data } = await axiosInstance.get("/api/user/me");
+    console.log("✅ [getCurrentUser API] 응답:", data);
+    return data;
+  } catch (error) {
+    console.error("❌ [getCurrentUser API] 오류:", error.response?.data || error.message);
+    throw error;
+  }
+};;
+
+// ------------------------------
+// ⭐ 회원가입
+// ------------------------------
+export const signup = async (payload) => {
+  console.log("🔵 [signup API] 요청:", payload);
+
   if (USE_MOCK_API) {
     const users = readUsers();
-    if (users.some((u) => u.email === email)) {
+    if (users.some((u) => u.email === payload.email)) {
       return mockError(new Error("이미 가입된 이메일입니다."), 200);
     }
 
     const newUser = {
       id: Date.now(),
-      email,
-      password,
-      nickname: nickname || email.split("@")[0],
-      isOnboarded: true,
-      provider: "local",
+      email: payload.email,
+      username: payload.username,
+      nickname: payload.nickname || payload.email.split("@")[0],
+      password: payload.password,
+      isOnboarded: true, // riskSolutions 포함하므로 온보딩 완료
     };
-
     writeUsers([...users, newUser]);
-    return mockResponse({ user: newUser });
+    return mockResponse({ message: "회원가입 성공", userId: newUser.id });
   }
 
-  // 백엔드 API: POST /api/user/signup
-  // 요청: { email, username, nickname, password, confirmPassword, riskSolutions }
-  const { data } = await axiosInstance.post("/api/user/signup", {
-    email,
-    username: email.split('@')[0],
-    nickname: nickname || email.split('@')[0],
-    password,
-    confirmPassword: password,
-    riskSolutions: riskSolutions || []
-  });
+  try {
+    // profileImageUrl 기본값 설정
+    const signupData = {
+      ...payload,
+      profileImageUrl: payload.profileImageUrl || "/default/user_profile.png"
+    };
 
-  return { user: data };
+    console.log("🔵 [signup API] 최종 요청 데이터:", signupData);
+
+    const { data } = await authAxios.post("/api/user/signup", signupData);
+    console.log("✅ [signup API] 응답:", data);
+    
+    // 백엔드 응답이 { message, userId } 또는 빈 응답일 수 있음
+    return data || { message: "회원가입 성공" };
+  } catch (error) {
+    console.error("❌ [signup API] 오류:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
-// 구글 로그인 (OAuth는 백엔드에서 처리하므로 프론트는 리다이렉트만)
+// ------------------------------
+// ⭐ 구글 로그인
+// ------------------------------
 export const googleLogin = async (googleIdToken) => {
+  console.log("🔵 [googleLogin API] 요청");
+
   if (USE_MOCK_API) {
     const mockUser = {
       id: Date.now(),
-      email: "googleuser@example.com",
-      nickname: "Google User",
-      provider: "google",
-      profile_image_url: "",
-      isOnboarded: false
+      email: "google@example.com",
+      nickname: "GoogleUser",
+      isOnboarded: false,
     };
-
-    const session = {
-      token: `mock-google-token-${mockUser.id}`,
-      user: mockUser,
-    };
-
-    return mockResponse(persistSession(session));
+    return mockResponse(
+      persistSession({
+        token: `mock-google-${mockUser.id}`,
+        user: mockUser,
+      })
+    );
   }
 
-  // OAuth2는 백엔드 리다이렉트로 처리됨
-  // 프론트에서는 /oauth2/authorization/google로 리다이렉트
-  window.location.href = "http://localhost:8080/oauth2/authorization/google";
+  try {
+    const { data } = await authAxios.post("/api/auth/google-login", {
+      idToken: googleIdToken,
+    });
+    
+    console.log("✅ [googleLogin API] 응답:", data);
+
+    const result = {
+      token: data.token || data.accessToken || data.data?.token,
+      user: data.user || data.data?.user || data,
+    };
+
+    console.log("✅ [googleLogin API] 정규화된 결과:", result);
+    return result;
+  } catch (error) {
+    console.error("❌ [googleLogin API] 오류:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
+// ------------------------------
+// ⭐ 로그아웃
+// ------------------------------
 export const logout = async () => {
-  clearStoredSession();
-  
+  console.log("🔵 [logout API] 요청");
+
   if (USE_MOCK_API) {
     return mockResponse({ success: true });
   }
 
-  // 백엔드 로그아웃 API가 있다면 호출
-  return { success: true };
+  try {
+    await axiosInstance.post("/api/auth/logout");
+    console.log("✅ [logout API] 성공");
+    return { success: true };
+  } catch (error) {
+    console.error("❌ [logout API] 오류:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
-// 온보딩 완료
+// ------------------------------
+// ⭐ 온보딩 (초기설정 저장)
+// ------------------------------
 export const completeOnboarding = async (onboardingData) => {
+  console.log("🔵 [completeOnboarding API] 요청:", onboardingData);
+
   if (USE_MOCK_API) {
     const session = getStoredSession();
-    if (!session) return mockError(new Error("로그인이 필요합니다."));
+    if (!session) {
+      return mockError(new Error("로그인이 필요합니다."), 401);
+    }
 
-    const updatedUser = {
+    const updated = {
       ...session.user,
       ...onboardingData,
       isOnboarded: true,
     };
 
-    const newSession = {
-      token: session.token,
-      user: updatedUser,
-    };
-    persistSession(newSession);
+    persistSession({ token: session.token, user: updated });
 
-    const mockApiData = {
-      riskSolutions: [
-        { riskLevel: 1, solution: "매일 30분 산책하기" },
-        { riskLevel: 2, solution: "취미 생활 즐기기" },
-      ],
-    };
-
-    return mockResponse({ ...newSession, ...mockApiData });
+    return mockResponse({
+      user: updated,
+      riskSolutions: onboardingData.riskSolutions,
+    });
   }
 
-  // 백엔드 API: POST /api/user/initial-setup
-  // 요청: { riskSolutions: [{ riskLevel, solution }] }
-  await axiosInstance.post("/api/user/initial-setup", {
-    riskSolutions: onboardingData.riskSolutions || []
-  });
-
-  // 세션 업데이트
-  const session = getStoredSession();
-  if (session) {
-    session.user.isOnboarded = true;
-    persistSession(session);
+  try {
+    const { data } = await axiosInstance.post(
+      "/user/initial-setup",
+      onboardingData
+    );
+    console.log("✅ [completeOnboarding API] 응답:", data);
+    return data;
+  } catch (error) {
+    console.error("❌ [completeOnboarding API] 오류:", error.response?.data || error.message);
+    throw error;
   }
-
-  return { success: true };
 };

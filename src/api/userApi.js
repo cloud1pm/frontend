@@ -1,4 +1,4 @@
-import { axiosInstance } from "../api/axiosInstance";
+import  axiosInstance  from "../api/axiosInstance";
 import { USE_MOCK_API, mockResponse } from "./config";
 
 /**
@@ -51,7 +51,7 @@ export const saveInitialSetup = async ({ userId = "guest", riskSolutions }) => {
     return mockResponse({ message: "Mock 저장 완료" });
   }
 
-  const { data } = await axiosInstance.post("/api/user/initial-setup", {
+  const { data } = await axiosInstance.post("/user/initial-setup", {
     riskSolutions,  // 
   });
 
@@ -84,7 +84,7 @@ export const getRiskSolutions = async ({ userId = "guest", riskLevel }) => {
     ? { riskLevel } 
     : {};
     
-  const { data } = await axiosInstance.get("/api/user/risk-solutions", {
+  const { data } = await axiosInstance.get("/user/risk-solutions", {
     params,
   });
 
@@ -108,7 +108,7 @@ export const saveEncouragement = async ({ userId = "guest", message }) => {
     return mockResponse(entry);
   }
 
-  const { data } = await axiosInstance.post("/api/user/encouragement", {
+  const { data } = await axiosInstance.post("/user/encouragement", {
     message,
   });
 
@@ -118,7 +118,7 @@ export const saveEncouragement = async ({ userId = "guest", message }) => {
 /**
  * GET /api/user/encouragement
  * Response: [
- *   { "id": 1, "message": "오늘도 수고했어요!", "createdAt": "2025-01-01T10:00:00Z" },
+ *   {  "message": "오늘도 수고했어요!" },
  *   ...
  * ]
  */
@@ -128,7 +128,7 @@ export const getEncouragement = async ({ userId = "guest" } = {}) => {
     return mockResponse(db[userId] ?? []);
   }
 
-  const { data } = await axiosInstance.get("/api/user/encouragement");
+  const { data } = await axiosInstance.get("/user/encouragement");
   return data;
 };
 
@@ -199,20 +199,8 @@ export const getCharacterInfo = async () => {
     return mockResponse(readCharacter());
   }
 
-  // 백엔드: /api/user/status 사용
-  const status = await getUserStatus();
-  // CharacterPage에서 기대하는 형식으로 변환
-  return {
-    name: "눈송이",
-    level: status.level ?? 1,
-    experience: status.experience ?? 0,
-    experienceToNext: status.experienceToNext ?? 10,
-    personality: "성장 진행중",
-    statusMessage: "오늘도 행복한 하루!",
-    daysStreak: status.daysStreak ?? 0,
-    totalPoints: status.food ?? 0,
-    totalFed: status.totalFed ?? 0,
-  };
+  const { data } = await axiosInstance.get("/user/character");
+  return data;
 };
 
 export const getGrowthMissions = async () => {
@@ -220,7 +208,7 @@ export const getGrowthMissions = async () => {
     return mockResponse(readMock(GROWTH_MISSIONS_KEY, defaultGrowthMissions()));
   }
 
-  const { data } = await axiosInstance.get("/api/user/character/growth-missions");
+  const { data } = await axiosInstance.get("/user/character/growth-missions");
   return data;
 };
 
@@ -229,7 +217,7 @@ export const getDailyMissions = async () => {
     return mockResponse(readMock(DAILY_MISSIONS_KEY, defaultDailyMissions()));
   }
 
-  const { data } = await axiosInstance.get("/api/user/character/daily-missions");
+  const { data } = await axiosInstance.get("/user/character/daily-missions");
   return data;
 };
 
@@ -272,16 +260,8 @@ export const feedCharacter = async () => {
     });
   }
 
-  const { data } = await axiosInstance.post("/api/user/feed-character");
-  // 백엔드 응답: { food, level, experience } 형식
-  return {
-    success: true,
-    character: {
-      level: data.level,
-      experience: data.experience,
-      totalPoints: data.food,
-    },
-  };
+  const { data } = await axiosInstance.post("/user/feed-character");
+  return data;
 };
 
 
