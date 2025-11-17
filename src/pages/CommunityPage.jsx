@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { communityAPI } from "../api/communityApi";
 import "./CommunityPage.css";
 
 const COMMUNITY_TABS = [
-  { id: "home", label: "Home" },
   { id: "popular", label: "인기글" },
   { id: "recent", label: "최신글" },
   { id: "my-posts", label: "내 작성글" },
@@ -40,6 +39,7 @@ const buildPagination = (currentPage, totalPages) => {
 
 const CommunityPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [posts, setPosts] = useState([]);
   const [activeTab, setActiveTab] = useState(COMMUNITY_TABS[0].id);
@@ -47,6 +47,16 @@ const CommunityPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // 게시글 작성 후 돌아왔을 때 새로고침
+  useEffect(() => {
+    if (location.state?.refresh) {
+      setRefreshKey((prev) => prev + 1);
+      // state 초기화
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   useEffect(() => {
     let ignore = false;
@@ -55,18 +65,33 @@ const CommunityPage = () => {
       setError(null);
 
       try {
-        const { items, totalPages: pages = 1 } = await communityAPI.getPosts({
+        const response = await communityAPI.getPosts({
           page: currentPage,
           tab: activeTab,
         });
 
+        console.log('API 응답:', response); // 디버깅용
+
         if (!ignore) {
-          setPosts(items ?? []);
-          setTotalPages(Math.max(1, pages));
+          // items가 배열인지 확인
+          if (Array.isArray(response?.items)) {
+            setPosts(response.items);
+            setTotalPages(Math.max(1, response.totalPages || 1));
+          } else if (Array.isArray(response)) {
+            // 응답이 직접 배열인 경우
+            setPosts(response);
+            setTotalPages(1);
+          } else {
+            console.error('예상치 못한 응답 형식:', response);
+            setPosts([]);
+            setTotalPages(1);
+          }
         }
       } catch (err) {
+        console.error('게시글 로드 에러:', err);
         if (!ignore) {
           setError(err);
+          setPosts([]);
         }
       } finally {
         if (!ignore) {
@@ -80,7 +105,21 @@ const CommunityPage = () => {
     return () => {
       ignore = true;
     };
-  }, [activeTab, currentPage]);
+  }, [activeTab, currentPage, refreshKey]);
+
+  // 페이지가 보이게 될 때마다 목록 새로고침
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        setRefreshKey((prev) => prev + 1);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   const pagination = useMemo(
     () => buildPagination(currentPage, totalPages),
@@ -168,9 +207,13 @@ const CommunityPage = () => {
                         className="community-post-card"
                         role="button"
                         tabIndex={0}
-                        onClick={() => navigate(`/community/post/${post.id}`)}
+                        onClick={() => {
+                          console.log('게시글 클릭:', post.id, '경로:', `/community/post/${post.id}`);
+                          navigate(`/community/post/${post.id}`);
+                        }}
                         onKeyDown={(event) => {
                           if (event.key === "Enter") {
+                            console.log('게시글 엔터:', post.id, '경로:', `/community/post/${post.id}`);
                             navigate(`/community/post/${post.id}`);
                           }
                         }}
@@ -198,7 +241,7 @@ const CommunityPage = () => {
           )}
         </div>
 
-        {!loading && !error && totalPages > 1 && (
+        {!loading && !error && totalPages > 1 && posts.length > 0 && (
           <div className="community-page__pagination">
             <button
               type="button"

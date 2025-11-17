@@ -30,8 +30,9 @@ const CharacterPage = () => {
       setError(null);
 
       try {
-        const [characterInfo, growthList, missions] = await Promise.all([
-          userAPI.getCharacterInfo(),
+        // 백엔드: /api/user/status 사용
+        const characterInfo = await userAPI.getCharacterInfo();
+        const [growthList, missions] = await Promise.all([
           userAPI.getGrowthMissions(),
           userAPI.getDailyMissions(),
         ]);
@@ -103,32 +104,11 @@ const CharacterPage = () => {
     try {
       const response = await userAPI.feedCharacter();
       if (response?.success) {
-        setCharacter((prev) => {
-          if (!prev) return prev;
-
-          const updatedExperience = prev.experience + 1;
-          const updatedTotalPoints = Math.max(prev.totalPoints - 1, 0);
-          const updatedTotalFed = prev.totalFed + 1;
-
-          let experience = updatedExperience;
-          let level = prev.level;
-          let experienceToNext = prev.experienceToNext;
-
-          if (updatedExperience >= prev.experienceToNext) {
-            level = prev.level + 1;
-            experience = updatedExperience - prev.experienceToNext;
-            experienceToNext = Math.round(prev.experienceToNext * 1.2);
-          }
-
-          return {
-            ...prev,
-            experience,
-            level,
-            experienceToNext,
-            totalPoints: updatedTotalPoints,
-            totalFed: updatedTotalFed,
-          };
-        });
+        // 백엔드 응답으로 상태 업데이트
+        const updatedCharacter = await userAPI.getCharacterInfo();
+        setCharacter(updatedCharacter);
+      } else {
+        alert(response?.message || "밥 주기에 실패했습니다.");
       }
     } catch (err) {
       console.error(err);

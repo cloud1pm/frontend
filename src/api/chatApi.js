@@ -1,4 +1,4 @@
-import axiosInstance from "./axiosInstance";
+import { axiosInstance } from "./axiosInstance";
 import { USE_MOCK_API, mockResponse } from "./config";
 
 /**

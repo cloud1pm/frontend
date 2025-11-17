@@ -157,6 +157,14 @@
   background: linear-gradient(135deg, #38bdf8, #6366f1);
 }
 
+.community-post-card__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
 .community-post-card__content {
   font-size: 15px;
   color: #1f2937;

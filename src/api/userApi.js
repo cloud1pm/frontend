@@ -1,4 +1,4 @@
-import axiosInstance from "./axiosInstance";
+import { axiosInstance } from "../api/axiosInstance";
 import { USE_MOCK_API, mockResponse } from "./config";
 
 /**
@@ -143,7 +143,7 @@ export const getEncouragement = async ({ userId = "guest" } = {}) => {
 
 const defaultCharacter = () => ({
   name: "눈송이",
-  level: 4,
+  level: 6,
   experience: 3,
   experienceToNext: 8,
   personality: "미소 가득한 눈송이",
@@ -154,8 +154,8 @@ const defaultCharacter = () => ({
 });
 
 const defaultGrowthMissions = () => [
-  { id: 1, level: "Lv. 1-2", title: "물방울", completed: true },
-  { id: 2, level: "Lv. 3-4", title: "얼음 결정", completed: true },
+  { id: 1, level: "Lv. 1-2", title: "물방울", completed: false },
+  { id: 2, level: "Lv. 3-4", title: "얼음 결정", completed: false },
   { id: 3, level: "Lv. 5-6", title: "아기 눈송이", completed: false },
   { id: 4, level: "Lv. 7-8", title: "눈송이", completed: false },
 ];
@@ -165,6 +165,7 @@ const defaultDailyMissions = () => [
   { id: 2, icon: "💬", title: "댓글 작성하기", points: 1, completed: false },
   { id: 3, icon: "❤️", title: "좋아요 남기기", points: 1, completed: false },
   { id: 4, icon: "🌞", title: "연속 출석", points: 1, completed: true },
+  { id: 5, icon: "✏️", title: "게시글 작성하기", points: 1, completed: true }
 ];
 
 const readCharacter = () => {
@@ -175,13 +176,43 @@ const readCharacter = () => {
   return stored;
 };
 
+// 📌 사용자 상태 조회 (밥 개수, 캐릭터 레벨 등)
+export const getUserStatus = async () => {
+  if (USE_MOCK_API) {
+    const character = readCharacter();
+    return mockResponse({
+      food: character.totalPoints,
+      level: character.level,
+      experience: character.experience,
+      experienceToNext: character.experienceToNext,
+      totalFed: character.totalFed,
+      daysStreak: character.daysStreak,
+    });
+  }
+
+  const { data } = await axiosInstance.get("/api/user/status");
+  return data;
+};
+
 export const getCharacterInfo = async () => {
   if (USE_MOCK_API) {
     return mockResponse(readCharacter());
   }
 
-  const { data } = await axiosInstance.get("/api/user/character");
-  return data;
+  // 백엔드: /api/user/status 사용
+  const status = await getUserStatus();
+  // CharacterPage에서 기대하는 형식으로 변환
+  return {
+    name: "눈송이",
+    level: status.level ?? 1,
+    experience: status.experience ?? 0,
+    experienceToNext: status.experienceToNext ?? 10,
+    personality: "성장 진행중",
+    statusMessage: "오늘도 행복한 하루!",
+    daysStreak: status.daysStreak ?? 0,
+    totalPoints: status.food ?? 0,
+    totalFed: status.totalFed ?? 0,
+  };
 };
 
 export const getGrowthMissions = async () => {
@@ -242,7 +273,15 @@ export const feedCharacter = async () => {
   }
 
   const { data } = await axiosInstance.post("/api/user/feed-character");
-  return data;
+  // 백엔드 응답: { food, level, experience } 형식
+  return {
+    success: true,
+    character: {
+      level: data.level,
+      experience: data.experience,
+      totalPoints: data.food,
+    },
+  };
 };
 
 
@@ -258,6 +297,7 @@ export const clearMockData = () => {
 
 export const userAPI = {
   getCharacterInfo,
+  getUserStatus,
   getGrowthMissions,
   getDailyMissions,
   feedCharacter,

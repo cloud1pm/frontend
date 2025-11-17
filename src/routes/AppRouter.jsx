@@ -22,20 +22,21 @@ import PostEditorPage from "../pages/PostEditorPage";
 import CommunityPostPage from "../pages/CommunityPostPage";
 import CharacterPage from "../pages/CharacterPage";
 import { useAuth } from "../context/AuthContext";
+import OAuth2RedirectPage from "../pages/OAuth2RedirectPage";
 
 import "../pages/AuthPage.css";
 // 로그인 필수
 const RequireAuth = ({ children }) => {
-  const { loading, isAuthenticated } = useAuth();
-  if (loading) return null;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+ // const { loading, isAuthenticated } = useAuth();
+ /* if (loading) return null;
+  if (!isAuthenticated) return <Navigate to="/login" replace />; */
   return children;
 };
 
 // 온보딩 끝나야 접근 가능
 const RequireOnboarded = ({ children }) => {
-  const { user } = useAuth();
-  if (!user?.isOnboarded) return <Navigate to="/onboarding" replace />;
+  // const { user } = useAuth();
+  // if (!user?.isOnboarded) return <Navigate to="/onboarding" replace />;
   return children;
 };
 
@@ -43,7 +44,7 @@ const RequireOnboarded = ({ children }) => {
    메인 레이아웃 (SideNav 숨김 처리)
 ---------------------------------------------- */
 
-const NO_SIDENAV_ROUTES = ["/", "/login", "/signup", "/onboarding"];
+const NO_SIDENAV_ROUTES = ["/", "/login", "/signup", "/onboarding", "/encouragement", "/oauth2/redirect"];
 
 const LayoutWrapper = ({ children }) => {
   const location = useLocation();
@@ -65,6 +66,8 @@ const LayoutWrapper = ({ children }) => {
 
 const AppRoutes = () => (
   <Routes>
+    
+   <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
    <Route path="/" element={<LandingPage />} />
     {/* 로그인 페이지 */}
     <Route path="/login" element={<LoginPage />} />
@@ -119,7 +122,18 @@ const AppRoutes = () => (
     />
 
     <Route
-      path="/community/write"
+      path="/community/post/:postId"
+      element={
+        <RequireAuth>
+          <RequireOnboarded>
+            <CommunityPostPage />
+          </RequireOnboarded>
+        </RequireAuth>
+      }
+    />
+
+    <Route
+      path="/community/edit/:postId"
       element={
         <RequireAuth>
           <RequireOnboarded>
@@ -130,11 +144,11 @@ const AppRoutes = () => (
     />
 
     <Route
-      path="/community/post/:postId"
+      path="/community/write"
       element={
         <RequireAuth>
           <RequireOnboarded>
-            <CommunityPostPage />
+            <PostEditorPage />
           </RequireOnboarded>
         </RequireAuth>
       }
@@ -152,9 +166,14 @@ const AppRoutes = () => (
       }
     />
 
-    {/* 기본 라우팅 */}
-    <Route path="/" element={<Navigate to="/login" replace />} />
-    <Route path="*" element={<Navigate to="/login" replace />} />
+{/*/ ❌ 기존: <Route path="/" element={<LandingPage />} />*/}
+{/*❌ 기존: <Route path="/" element={<Navigate to="/login" replace />} /> */}
+
+{/*// ✅ 수정: '/' 경로를 LandingPage로 두거나, 테스트 경로로 연결합니다. */}
+{/*<Route path="/" element={<LandingPage />} /> */}
+
+{/*// 만약 /community로 바로 리다이렉트하고 싶다면: */}
+<Route path="/" element={<Navigate to="/community" replace />} />
   </Routes>
 );
 

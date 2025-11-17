@@ -1,13 +1,18 @@
 // src/pages/LoginPage.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { GoogleLogin } from "@react-oauth/google";
+// import { GoogleLogin } from "@react-oauth/google"; // ❌ 사용하지 않으므로 제거
 import { useAuth } from "../context/AuthContext";
+// 💡 config 파일에서 USE_MOCK_API를 가져와야 합니다.
+// 이 파일 경로가 현재 환경과 다를 수 있습니다. 편의상 임시로 정의했습니다.
+// 실제 프로젝트에 맞게 경로를 수정하거나 config 파일에서 import 해야 합니다.
+const USE_MOCK_API = false; // 임시 정의. 실제로는 import ... from "../config"; 필요
 import "./AuthPage.css";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, googleLogin, isAuthenticated, loading, user } = useAuth();
+  // 💡 googleLogin은 이제 리다이렉션 방식을 사용하므로 필요 없습니다.
+  const { login, isAuthenticated, loading, user } = useAuth(); 
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
@@ -47,17 +52,21 @@ const LoginPage = () => {
     }
   };
 
-  // ⭐ 구글 로그인 처리
-  const handleGoogleSuccess = async (credential) => {
-    try {
-      const response = await googleLogin(credential);
-      navigate(response?.user?.isOnboarded ? "/chat" : "/onboarding", {
-        replace: true,
-      });
-    } catch {
-      alert("구글 로그인 실패");
+  // 🚀 [추가] Google OAuth2 리다이렉트 시작 함수
+  const handleGoogleLogin = () => {
+    // Mock API가 아닌 경우 백엔드 OAuth2 엔드포인트로 리다이렉트
+    if (!USE_MOCK_API) {
+      window.location.href = "http://localhost:8080/oauth2/authorization/google";
+    } else {
+      // Mock API 로직 (필요하다면 여기에 추가)
+      console.log("Mock Google Login initiated.");
+      // navigate("/oauth2/redirect?token=MOCK_TOKEN"); // Mock 토큰 리다이렉션 예시
     }
   };
+
+
+  // ⭐ [제거] 기존 구글 로그인 처리 함수는 리다이렉트 방식으로 대체되므로 삭제
+  // const handleGoogleSuccess = async (credential) => { ... }; 
 
   return (
     // 👈 [수정] .plain-layout div 추가
@@ -97,11 +106,21 @@ const LoginPage = () => {
 
         <div style={{ margin: "20px 0", textAlign: "center" }}>또는</div>
 
-        {/* 구글 로그인 버튼 */}
-        <GoogleLogin
-          onSuccess={(res) => handleGoogleSuccess(res.credential)}
-          onError={() => alert("구글 로그인 오류")}
-        />
+        {/* 🚀 [변경] GoogleLogin 컴포넌트 대신 리다이렉트 버튼으로 대체 */}
+        <button
+          className="auth-google-redirect-btn" // CSS 스타일링을 위해 클래스를 추가하세요.
+          onClick={handleGoogleLogin}
+          disabled={isSubmitting}
+          style={{ 
+              width: '100%', 
+              padding: '10px', 
+              cursor: 'pointer',
+              // 임시 스타일: 실제 디자인에 맞게 변경하세요.
+          }}
+        >
+            Google 계정으로 로그인
+        </button>
+
 
         <div className="auth-footer">
           계정이 없나요? <Link to="/signup" className="auth-link">회원가입</Link>
