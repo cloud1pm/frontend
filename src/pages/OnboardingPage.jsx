@@ -1,17 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-// 👉 userApi가 mock/실제 API 전환을 모두 처리합니다.
-import { saveInitialSetup } from "../api/userApi";
-import { USE_MOCK_API } from "../api/config";
+import { useNavigate, useLocation } from "react-router-dom";
+
+import { signup } from "../api/authApi";
 import { useAuth } from "../context/AuthContext";
 
-// 감정 단계 목록
 const riskLevels = [
-  { id: 1, title: "레벨 1: 살짝 불편할 때", description: "가벼운 스트레스나 불편함을 느낄 때" },
-  { id: 2, title: "레벨 2: 기분이 처지거나 짜증날 때", description: "기분이 좋지 않고 예민해질 때" },
-  { id: 3, title: "레벨 3: 우울하고 무기력할 때", description: "에너지가 없고 의욕이 떨어질 때" },
-  { id: 4, title: "레벨 4: 많이 지치고 눈물 날 때", description: "감정이 북받치고 힘든 상태" },
-  { id: 5, title: "레벨 5: 견디기 힘들 때", description: "전문적인 도움이 필요한 상태" },
+  { id: 1, description: "살짝 불편함" },
+  { id: 2, description: "기분이 처짐" },
+  { id: 3, description: "우울/무기력" },
+  { id: 4, description: "많이 지침" },
+  { id: 5, description: "전문 도움 필요" },
 ];
 
 const solutionCandidates = [
@@ -70,47 +68,39 @@ const levelEmojis = {
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
-  const { user, loading, isAuthenticated, completeOnboarding } = useAuth();
+  const location = useLocation();
+  const { login } = useAuth();
+
+  const signupInfo = location.state?.signupInfo;
+
   const [step, setStep] = useState(1);
   const [solutions, setSolutions] = useState({ 1: [], 2: [], 3: [], 4: [], 5: [] });
   const [customInput, setCustomInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const displayName =
-    user?.nickname ||
-    user?.username ||
-    user?.email?.split("@")[0] ||
-    "친구";
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (loading) return;
-    if (!isAuthenticated) {
-      navigate("/login", { replace: true });
-      return;
+    console.log("🔵 [OnboardingPage] signupInfo:", signupInfo);
+    
+    if (!signupInfo) {
+      console.warn("⚠️ [OnboardingPage] signupInfo 없음 → /signup 리다이렉트");
+      alert("회원가입 정보가 없습니다. 다시 시도해주세요.");
+      navigate("/signup");
     }
-    if (user?.isOnboarded) {
-      navigate("/chat", { replace: true });
-    }
-  }, [loading, isAuthenticated, user, navigate]);
+  }, [signupInfo, navigate]);
 
-  // 활동 선택/해제
   const handleSelect = (activity) => {
     setSolutions((prev) => {
-      const selected = prev[step];
-      const updated = selected.includes(activity)
-        ? selected.filter((a) => a !== activity)
-        : [...selected, activity];
+      const updated = prev[step].includes(activity)
+        ? prev[step].filter((v) => v !== activity)
+        : [...prev[step], activity];
       return { ...prev, [step]: updated };
     });
   };
 
-  // 직접 입력 추가
   const handleAddCustom = () => {
     const trimmed = customInput.trim();
-    if (!trimmed) return;
-    if (solutions[step].includes(trimmed)) {
-      alert("이미 추가된 활동입니다.");
-      return;
-    }
+    if (!trimmed || solutions[step].includes(trimmed)) return;
     setSolutions((prev) => ({
       ...prev,
       [step]: [...prev[step], trimmed],
@@ -118,79 +108,102 @@ const OnboardingPage = () => {
     setCustomInput("");
   };
 
-  // Enter 키 처리
   const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleAddCustom();
-    }
+    if (e.key === "Enter") handleAddCustom();
   };
 
-  // 다음 단계
   const handleNext = () => {
-    if (step < 5) {
-      setStep(step + 1);
-    } else {
-      handleSubmit();
-    }
+    if (step < 5) setStep(step + 1);
+    else handleSubmit();
   };
 
-  // 이전 단계
   const handlePrev = () => {
     if (step > 1) setStep(step - 1);
   };
 
-  // 최종 저장
   const handleSubmit = async () => {
+    console.log("🔵 [OnboardingPage] 제출 시작");
     setIsSubmitting(true);
+    setError(null);
+
     try {
-      // 데이터 포맷팅
-      const formatted = Object.entries(solutions).flatMap(([level, items]) =>
+      // 1) riskSolutions 포맷팅
+      const formattedSolutions = Object.entries(solutions).flatMap(([level, items]) =>
         items.map((solution) => ({
           riskLevel: Number(level),
           solution,
         }))
       );
 
-      // API 호출 (mock 모드에서는 localStorage, 실제 모드에서는 백엔드 호출)
-      const userId =
-        user?.id ||
-        user?.userId ||
-        user?.email ||
-        "guest";
+      console.log("🔵 [OnboardingPage] formattedSolutions:", formattedSolutions);
 
-      await saveInitialSetup({
-        riskSolutions: formatted,
+      // 2) 회원가입 요청 페이로드
+      const signupPayload = {
+        email: signupInfo.email,
+        username: signupInfo.username,
+        nickname: signupInfo.nickname || signupInfo.username,
+        password: signupInfo.password,
+        confirmPassword: signupInfo.confirmPassword,
+        profileImageUrl: "/default/user_profile.png",
+        riskSolutions: formattedSolutions,
+      };
+
+      console.log("🔵 [OnboardingPage] 회원가입 요청:", signupPayload);
+
+      // 3) 회원가입 API 호출
+      const signupResult = await signup(signupPayload);
+      console.log("✅ [OnboardingPage] 회원가입 성공:", signupResult);
+
+      // 4) 자동 로그인
+      console.log("🔵 [OnboardingPage] 자동 로그인 시도");
+      const loginResult = await login({
+        username: signupInfo.username,
+        password: signupInfo.password,
       });
+      console.log("✅ [OnboardingPage] 자동 로그인 성공:", loginResult);
 
-      alert(
-        USE_MOCK_API
-          ? "온보딩 정보가 임시 저장되었습니다! (mock)"
-          : "온보딩 정보가 저장되었습니다!"
-      );
-      completeOnboarding();
+      // 5) 성공 메시지 및 리다이렉트
+      alert("회원가입이 완료되었습니다! 환영합니다 😊");
+      console.log("🔵 [OnboardingPage] /chat으로 이동");
       navigate("/chat", { replace: true });
-    } catch (error) {
-      console.error("온보딩 저장 실패:", error);
-      alert(
-        error.response?.status === 401
-          ? "로그인이 필요합니다. 인증 토큰을 확인해주세요."
-          : "저장 중 오류가 발생했습니다. 다시 시도해주세요."
-      );
+      
+    } catch (err) {
+      console.error("❌ [OnboardingPage] 온보딩/회원가입 실패:", err);
+      
+      let errorMessage = "회원가입 중 오류가 발생했습니다.";
+      
+      if (err.response) {
+        console.error("❌ 백엔드 에러 응답:", err.response.data);
+        errorMessage = err.response.data?.message || 
+                      err.response.data?.error || 
+                      `서버 오류 (${err.response.status})`;
+      } else if (err.request) {
+        console.error("❌ 응답 없음:", err.request);
+        errorMessage = "서버와 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.";
+      } else {
+        console.error("❌ 요청 설정 오류:", err.message);
+        errorMessage = err.message || "알 수 없는 오류";
+      }
+      
+      setError(errorMessage);
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const current = riskLevels.find((r) => r.id === step);
-  const currentEmoji = levelEmojis[step] || "💛";
-  const candidates = useMemo(
-    () => [...solutionCandidates].sort(),
-    []
-  );
+  const currentEmoji = levelEmojis[step];
+
+  const candidates = useMemo(() => [...solutionCandidates].sort(), []);
+
+  if (!signupInfo) {
+    return <div>로딩 중...</div>;
+  }
 
   return (
     <div style={styles.container}>
-      {/* 헤더 */}
+      {/* Header */}
       <div style={styles.header}>
         <div style={styles.stepInfo}>
           <span style={styles.stepText}>Step {step} of 5</span>
@@ -208,27 +221,31 @@ const OnboardingPage = () => {
         </div>
       </div>
 
-      {/* 메인 컨텐츠 */}
+      {/* Content */}
       <div style={styles.content}>
+        {error && (
+          <div style={{
+            padding: "12px",
+            backgroundColor: "#fee2e2",
+            color: "#dc2626",
+            borderRadius: "8px",
+            marginBottom: "16px",
+            fontSize: "14px"
+          }}>
+            {error}
+          </div>
+        )}
+
         <div style={styles.iconContainer}>
           <span style={styles.icon}>{currentEmoji}</span>
         </div>
-        
+
         <h2 style={styles.title}>나만의 마음 돌봄 방법</h2>
-        <p style={styles.greeting}>
-          {displayName}님, 나만의 감정 처방을 저장하고,위기 순간엔 스스로의 해결책을 꺼내드릴게요
-          
-        </p>
-        <p style={styles.subtitle}>
-          감정 상태에 따라 나에게 도움이 되는 해결책을 미리 저장해보세요
-        </p>
-        <p style={styles.helper}>
-          각 단계에서 동일한 후보 리스트 중 원하는 것들을 자유롭게 선택하거나 직접 추가할 수 있어요.
-        </p>
+        <p style={styles.subtitle}>감정 상태에 따라 도움이 되는 해결책을 저장해보세요</p>
 
         <div style={styles.card}>
           <div style={styles.levelHeader}>
-            <h3 style={styles.levelTitle}>LEVEL: {step}/5</h3>
+            <h3 style={styles.levelTitle}>LEVEL {step}/5</h3>
             <div style={styles.levelDots}>
               {[1, 2, 3, 4, 5].map((i) => (
                 <span
@@ -242,94 +259,63 @@ const OnboardingPage = () => {
             </div>
           </div>
 
-          <p style={styles.levelDescription}>
-            {current.description}
-          </p>
+          <p style={styles.levelDescription}>{current.description}</p>
 
-          {/* 추천 솔루션 그리드 */}
           <div style={styles.activityGrid}>
             {candidates.map((activity) => (
               <button
                 key={activity}
+                onClick={() => handleSelect(activity)}
+                disabled={isSubmitting}
                 style={{
                   ...styles.activityButton,
-                  ...(solutions[step].includes(activity) ? styles.activityButtonSelected : {}),
+                  ...(solutions[step].includes(activity)
+                    ? styles.activityButtonSelected
+                    : {}),
+                  ...(isSubmitting ? { opacity: 0.6, cursor: "not-allowed" } : {})
                 }}
-                onClick={() => handleSelect(activity)}
               >
-                <span style={styles.activityIcon}>
-                  {solutionIcons[activity] || "✨"}
-                </span>
+                <span style={styles.activityIcon}>{solutionIcons[activity] || "✨"}</span>
                 <span style={styles.activityText}>{activity}</span>
               </button>
             ))}
           </div>
 
-          {/* 직접 입력 */}
           <div style={styles.customInputContainer}>
             <input
               type="text"
-              placeholder="기타"
+              placeholder="기타 활동 입력"
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
               onKeyPress={handleKeyPress}
+              disabled={isSubmitting}
               style={styles.customInput}
             />
           </div>
 
-          {/* 선택된 항목 표시 */}
-          {solutions[step].length > 0 && (
-            <div style={styles.selectedSection}>
-              <p style={styles.selectedLabel}>선택한 활동 ({solutions[step].length}개)</p>
-              <div style={styles.selectedList}>
-                {solutions[step].map((s, idx) => (
-                  <div key={idx} style={styles.selectedItem}>
-                    <span>{s}</span>
-                    <button
-                      style={styles.removeButton}
-                      onClick={() =>
-                        setSolutions((prev) => ({
-                          ...prev,
-                          [step]: prev[step].filter((v) => v !== s),
-                        }))
-                      }
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div style={styles.navRow}>
             <button
               type="button"
-              style={{
-                ...styles.navButton,
-                ...styles.prevNavButton,
-                ...(step === 1 || isSubmitting ? styles.navButtonDisabled : {}),
-              }}
               onClick={handlePrev}
               disabled={step === 1 || isSubmitting}
+              style={{
+                ...styles.navButton,
+                ...(step === 1 || isSubmitting ? styles.navButtonDisabled : {}),
+              }}
             >
               이전 단계
             </button>
+
             <button
               type="button"
-              style={{
-                ...styles.navButton,
-                ...styles.nextNavButton,
-                ...(isSubmitting ? styles.navButtonDisabled : {}),
-              }}
               onClick={handleNext}
               disabled={isSubmitting}
+              style={{
+                ...styles.navButton,
+                ...(isSubmitting ? styles.navButtonDisabled : {})
+              }}
             >
-              {isSubmitting
-                ? "저장 중..."
-                : step < 5
-                  ? "다음 단계로 →"
-                  : "모두 완료!"}
+              {isSubmitting ? "처리 중..." : (step < 5 ? "다음 단계 →" : "회원가입 완료")}
             </button>
           </div>
         </div>
@@ -352,9 +338,8 @@ const styles = {
   },
   stepInfo: {
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "12px",
+    justifyContent: "center",
+    marginBottom: "10px",
   },
   stepText: {
     fontSize: "14px",
@@ -382,9 +367,7 @@ const styles = {
     textAlign: "center",
     marginBottom: "16px",
   },
-  icon: {
-    fontSize: "48px",
-  },
+  icon: { fontSize: "48px" },
   title: {
     fontSize: "24px",
     fontWeight: "600",
@@ -398,19 +381,6 @@ const styles = {
     textAlign: "center",
     marginBottom: "32px",
   },
-  greeting: {
-    fontSize: "15px",
-    color: "#4c1d95",
-    textAlign: "center",
-    marginBottom: "12px",
-    fontWeight: "600",
-  },
-  helper: {
-    fontSize: "13px",
-    color: "#9ca3af",
-    textAlign: "center",
-    marginBottom: "24px",
-  },
   card: {
     backgroundColor: "white",
     borderRadius: "16px",
@@ -420,24 +390,14 @@ const styles = {
   levelHeader: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: "12px",
   },
-  levelTitle: {
-    fontSize: "16px",
-    fontWeight: "600",
-    color: "#111827",
-    margin: 0,
-  },
-  levelDots: {
-    display: "flex",
-    gap: "6px",
-  },
+  levelTitle: { fontSize: "16px", fontWeight: "600", color: "#111827" },
+  levelDots: { display: "flex", gap: "6px" },
   dot: {
     width: "10px",
     height: "10px",
     borderRadius: "50%",
-    transition: "background-color 0.3s",
   },
   levelDescription: {
     fontSize: "13px",
@@ -459,63 +419,20 @@ const styles = {
     borderRadius: "8px",
     backgroundColor: "white",
     cursor: "pointer",
-    transition: "all 0.2s",
     fontSize: "14px",
   },
   activityButtonSelected: {
     backgroundColor: "#ede9fe",
-    borderColor: "#7c3aed",
+    border: "1px solid #7c3aed",
   },
-  activityIcon: {
-    fontSize: "16px",
-  },
-  activityText: {
-    flex: 1,
-    textAlign: "left",
-    color: "#374151",
-  },
-  customInputContainer: {
-    marginBottom: "20px",
-  },
+  activityIcon: { fontSize: "16px" },
+  activityText: { flex: 1 },
+  customInputContainer: { marginBottom: "20px" },
   customInput: {
     width: "100%",
     padding: "12px 16px",
     border: "1px solid #e5e7eb",
     borderRadius: "8px",
-    fontSize: "14px",
-    boxSizing: "border-box",
-  },
-  selectedSection: {
-    borderTop: "1px solid #e5e7eb",
-    paddingTop: "16px",
-  },
-  selectedLabel: {
-    fontSize: "13px",
-    color: "#6b7280",
-    marginBottom: "8px",
-    fontWeight: "500",
-  },
-  selectedList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-  },
-  selectedItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "8px 12px",
-    backgroundColor: "#f9fafb",
-    borderRadius: "6px",
-    fontSize: "14px",
-  },
-  removeButton: {
-    background: "none",
-    border: "none",
-    color: "#ef4444",
-    cursor: "pointer",
-    fontSize: "16px",
-    padding: "0 4px",
   },
   navRow: {
     marginTop: "24px",
@@ -527,21 +444,13 @@ const styles = {
     padding: "12px 18px",
     borderRadius: "10px",
     border: "none",
-    fontSize: "14px",
     fontWeight: "600",
     cursor: "pointer",
-    transition: "all 0.2s",
-  },
-  prevNavButton: {
-    backgroundColor: "#f3f4f6",
-    color: "#374151",
-  },
-  nextNavButton: {
     backgroundColor: "#7c3aed",
     color: "white",
   },
   navButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
     cursor: "not-allowed",
   },
 };

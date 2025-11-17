@@ -67,7 +67,7 @@ export const communityAPI = {
       return withMockMeta(randomized);
     }
 
-    const { data } = await axiosInstance.get("/api/community/posts", {
+    const { data } = await axiosInstance.get("/community/posts", {
       params: { page, tab },
     });
     return data;

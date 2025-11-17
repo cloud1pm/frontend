@@ -7,6 +7,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import "../styles.css";
+
 // Common Components
 import SideNav from "../components/common/SideNav";
 import LandingPage from "../pages/LandingPage";
@@ -25,6 +26,7 @@ import EncouragementPage from "../pages/EncouragementPage"; // 👈 1. import �
 import { useAuth } from "../context/AuthContext";
 
 import "../pages/AuthPage.css";
+
 // 로그인 필수
 const RequireAuth = ({ children }) => {
   const { loading, isAuthenticated } = useAuth();
@@ -44,7 +46,7 @@ const RequireOnboarded = ({ children }) => {
    메인 레이아웃 (SideNav 숨김 처리)
 ---------------------------------------------- */
 
-// 👇 2. /encouragement 도 사이드바 숨김 처리
+//  2. /encouragement 도 사이드바 숨김 처리
 const NO_SIDENAV_ROUTES = ["/", "/login", "/signup", "/onboarding", "/encouragement"];
 
 const LayoutWrapper = ({ children }) => {
@@ -75,14 +77,8 @@ const AppRoutes = () => (
     <Route path="/signup" element={<SignupPage />} />
 
     {/* 온보딩 */}
-    <Route
-      path="/onboarding"
-      element={
-        <RequireAuth>
-          <OnboardingPage />
-        </RequireAuth>
-      }
-    />
+    <Route path="/onboarding" element={<OnboardingPage />} />
+
 
     {/* 채팅 */}
     <Route
