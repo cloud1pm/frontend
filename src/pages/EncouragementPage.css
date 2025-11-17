@@ -122,3 +122,23 @@
 .main-btn:hover {
   background: #6b24d8;
 }
+.emotion-info-simple {
+  margin-top: 20px;        /* 그래프와 붙는 것을 방지 */
+  margin-bottom: 16px;     /* 그래프 위쪽과도 공간 확보 */
+  background: #f9fafb;
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+
+.emotion-info-simple p {
+  margin: 4px 0;
+}
+
+.emotion-tip {
+  color: #64748b;
+  margin-top: 6px;
+  font-size: 13.5px;
+}
