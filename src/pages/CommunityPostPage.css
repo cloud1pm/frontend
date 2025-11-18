@@ -21,15 +21,20 @@
   color: #1f2937;
 }
 
-/* 뒤로가기 */
 .community-post-page__back {
   border: none;
   background: transparent;
   color: #6b7280;
+  
   font-size: 15px;
   cursor: pointer;
-  margin-bottom: -16px;
-  padding: 6px 0;
+
+  padding: 0;
+  margin: 0 0 8px 0; /* 위쪽과 자연스럽게 붙게 */
+  
+  align-self: flex-start; /*  왼쪽 정렬 핵심 */
+  text-align: left;       /* 혹시 모를 텍스트 흐름 고정 */
+
   transition: color .2s ease;
 }
 

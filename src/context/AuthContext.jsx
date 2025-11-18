@@ -21,184 +21,147 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🟣 user 형식 정규화 + 디버깅
-  const normalizeUser = (u) => {
-    console.log("🔵 [normalizeUser] 원본 데이터:", u);
-    
-    if (!u) {
-      console.warn("⚠️ [normalizeUser] user 데이터가 null/undefined");
-      return null;
-    }
+  /* ----------------------------------------------------
+   *  user 정규화: 백엔드 스키마와 100% 맞추기
+   * ---------------------------------------------------- */
 
-    const normalized = {
-      id: u.id ?? u.userId ?? null,
+  const normalizeUser = (u) => {
+    if (!u) return null;
+
+    // 백엔드 snake_case → camelCase 변환
+    return {
+      id: u.id ?? null,
       email: u.email ?? null,
       username: u.username ?? null,
-      nickname: u.nickname ?? null,
+      nickname: u.nickname ?? null, 
       profileImageUrl: u.profileImageUrl ?? u.profile_image_url ?? null,
+
+      provider: u.provider ?? null,
+      providerId: u.providerId ?? u.provider_id ?? null,
+
+      rice: u.rice ?? 0,
+      characterLevel: u.characterLevel ?? u.character_level ?? 1,
+      feedCount: u.feedCount ?? u.feed_count ?? 0,
+      consecutiveDays: u.consecutiveDays ?? u.consecutive_days ?? 0,
+
+      lastLoginDate: u.lastLoginDate ?? u.last_login_date ?? null,
       isOnboarded:
         u.isOnboarded ??
-        u.has_completed_initial_setup ??
         u.hasCompletedInitialSetup ??
+        u.has_completed_initial_setup ??
         false,
     };
-
-    console.log("✅ [normalizeUser] 정규화 완료:", normalized);
-    return normalized;
   };
 
-  // 🟣 axios + 상태 + localStorage 설정
+  /* ----------------------------------------------------
+   * 세션 저장 + axios 토큰 설정
+   * ---------------------------------------------------- */
   const setSession = ({ token: newToken, user: rawUser }) => {
-    console.log("🔵 [setSession] 입력:", { token: newToken, user: rawUser });
-    
     const normalized = normalizeUser(rawUser);
 
     if (newToken) {
       axiosInstance.defaults.headers.common.Authorization = `Bearer ${newToken}`;
-      console.log("✅ [setSession] Authorization 헤더 설정 완료");
     } else {
       delete axiosInstance.defaults.headers.common.Authorization;
-      console.log("⚠️ [setSession] Authorization 헤더 제거");
     }
 
     setToken(newToken || null);
     setUser(normalized);
-    console.log("✅ [setSession] 상태 업데이트 완료:", { token: newToken, user: normalized });
   };
 
-  // 🟣 로컬 세션에서 복원
+  /* ----------------------------------------------------
+   * LocalStorage에서 세션 복원
+   * ---------------------------------------------------- */
   useEffect(() => {
-    console.log("🔵 [useEffect] 세션 복원 시작");
     const saved = getStoredSession();
-    
+
     if (saved?.token && saved?.user) {
-      console.log("✅ [useEffect] 저장된 세션 발견:", saved);
       axiosInstance.defaults.headers.common.Authorization = `Bearer ${saved.token}`;
       setSession(saved);
-    } else {
-      console.log("⚠️ [useEffect] 저장된 세션 없음");
     }
-    
+
     setLoading(false);
   }, []);
 
-  // 🟣 로그인
+  /* ----------------------------------------------------
+   * 로그인
+   * ---------------------------------------------------- */
   const handleLogin = async (credentials) => {
-    console.log("🔵 [handleLogin] 시작:", credentials);
-    
-    try {
-      const raw = await loginApi(credentials);
-      console.log("🔵 [handleLogin] API 응답:", raw);
+    // 1) login API 호출
+    const raw = await loginApi(credentials);
 
-      // 백엔드 응답 구조 유연하게 처리
-      const response = {
-        token: raw.token || raw.accessToken || raw.data?.token || raw.data?.accessToken,
-        user: normalizeUser(raw.user || raw.data?.user || raw),
-      };
+    const token = raw.token;
+    if (!token) throw new Error("로그인 토큰 없음");
 
-      console.log("✅ [handleLogin] 정규화된 응답:", response);
+    // 임시 user (userId만 있는 상태)
+    const tempUser = raw.user;
 
-      if (!response.token) {
-        throw new Error("토큰이 응답에 포함되지 않았습니다.");
-      }
+    // 2) 토큰 먼저 저장
+    persistSession({ token, user: tempUser });
+    setSession({ token, user: tempUser });
 
-      if (!response.user) {
-        throw new Error("사용자 정보가 응답에 포함되지 않았습니다.");
-      }
+    // 3) 토큰 기반으로 실제 유저 데이터 조회
+    const profileResponse = await axiosInstance.get("/user");
 
-      persistSession(response);
-      setSession(response);
+    const fullUser = profileResponse.data;
 
-      console.log("✅ [handleLogin] 로그인 성공");
-      return response;
-    } catch (error) {
-      console.error("❌ [handleLogin] 로그인 실패:", error);
-      throw error;
-    }
+    // 4) 진짜 user 정보로 세션 갱신
+    const sessionData = { token, user: fullUser };
+    persistSession(sessionData);
+    setSession(sessionData);
+
+    return sessionData;
   };
 
-  // 🟣 구글 로그인
+  /* ----------------------------------------------------
+   * 구글 로그인
+   * ---------------------------------------------------- */
   const handleGoogleLogin = async (credential) => {
-    console.log("🔵 [handleGoogleLogin] 시작");
-    
-    try {
-      const raw = await googleLoginApi(credential);
-      console.log("🔵 [handleGoogleLogin] API 응답:", raw);
+    const raw = await googleLoginApi(credential);
 
-      const response = {
-        token: raw.token || raw.accessToken || raw.data?.token,
-        user: normalizeUser(raw.user || raw.data?.user || raw),
-      };
+    const response = {
+      token: raw.token || raw.accessToken || raw.data?.token,
+      user: raw.user || raw.data?.user,
+    };
 
-      console.log("✅ [handleGoogleLogin] 정규화된 응답:", response);
-
-      if (!response.token || !response.user) {
-        throw new Error("구글 로그인 응답이 유효하지 않습니다.");
-      }
-
-      persistSession(response);
-      setSession(response);
-
-      console.log("✅ [handleGoogleLogin] 구글 로그인 성공");
-      return response;
-    } catch (error) {
-      console.error("❌ [handleGoogleLogin] 구글 로그인 실패:", error);
-      throw error;
-    }
+    persistSession(response);
+    setSession(response);
+    return response;
   };
 
-  // 🟣 회원가입 — session 변경 없음
+  /* ----------------------------------------------------
+   * 회원가입 (세션 변화 없음)
+   * ---------------------------------------------------- */
   const handleSignup = async (payload) => {
-    console.log("🔵 [handleSignup] 시작:", payload);
-    
-    try {
-      const result = await signupApi(payload);
-      console.log("✅ [handleSignup] 회원가입 성공:", result);
-      return result;
-    } catch (error) {
-      console.error("❌ [handleSignup] 회원가입 실패:", error);
-      throw error;
-    }
+    return await signupApi(payload);
   };
 
-  // 🟣 로그아웃
+  /* ----------------------------------------------------
+   * 로그아웃
+   * ---------------------------------------------------- */
   const handleLogout = async () => {
-    console.log("🔵 [handleLogout] 시작");
-    
     try {
       await logoutApi();
-      console.log("✅ [handleLogout] 로그아웃 API 성공");
-    } catch (e) {
-      console.warn("⚠️ [handleLogout] 로그아웃 API 실패 (무시 가능):", e);
-    }
-
+    } catch {}
     setSession({ token: null, user: null });
     clearStoredSession();
-    console.log("✅ [handleLogout] 로그아웃 완료");
   };
 
-  // 🟣 온보딩 완료
+  /* ----------------------------------------------------
+   * 온보딩 완료
+   * ---------------------------------------------------- */
   const handleCompleteOnboarding = async (payload) => {
-    console.log("🔵 [handleCompleteOnboarding] 시작:", payload);
-    
-    try {
-      await completeOnboardingApi(payload);
+    await completeOnboardingApi(payload);
 
-      const updatedUser = {
-        ...user,
-        isOnboarded: true,
-      };
+    const updatedUser = {
+      ...user,
+      isOnboarded: true,
+    };
 
-      const response = { token, user: updatedUser };
-      persistSession(response);
-      setSession(response);
-      
-      console.log("✅ [handleCompleteOnboarding] 온보딩 완료");
-      return response;
-    } catch (error) {
-      console.error("❌ [handleCompleteOnboarding] 온보딩 실패:", error);
-      throw error;
-    }
+    const response = { token, user: updatedUser };
+    persistSession(response);
+    setSession(response);
+    return response;
   };
 
   const value = useMemo(
@@ -215,8 +178,6 @@ export const AuthProvider = ({ children }) => {
     }),
     [user, token, loading]
   );
-
-  console.log("🔵 [AuthProvider] 현재 상태:", { user, token, loading, isAuthenticated: Boolean(user && token) });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

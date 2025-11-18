@@ -1,279 +1,170 @@
 import React, { useEffect, useMemo, useState } from "react";
-import "./CharacterPage.css";
+import "./CharacterPage.css"; // ✅ 아래의 CSS 파일이 꼭 있어야 디자인이 적용됩니다.
 import { userAPI } from "../api/userApi";
 
+// 이미지 Import
 import waterImg from "../assets/character/water.png";
 import snowImg from "../assets/character/snow.png";
 import babyImg from "../assets/character/baby.png";
 import noonsongImg from "../assets/character/noonsong.png";
 
 const CHARACTER_STAGES = [
-  { id: "Lv. 1-2", minLevel: 1, maxLevel: 2, name: "물방울", image: waterImg },
-  { id: "Lv. 3-4", minLevel: 3, maxLevel: 4, name: "얼음 결정", image: snowImg },
-  { id: "Lv. 5-6", minLevel: 5, maxLevel: 6, name: "아기 눈송이", image: babyImg },
-  { id: "Lv. 7-8", minLevel: 7, maxLevel: 8, name: "눈송이", image: noonsongImg },
+  { minLevel: 1, maxLevel: 2, name: "물", img: waterImg, gradient: "gradient-blue" },
+  { minLevel: 3, maxLevel: 4, name: "얼음결정", img: snowImg, gradient: "gradient-cyan" },
+  { minLevel: 5, maxLevel: 6, name: "아기 눈송이", img: babyImg, gradient: "gradient-indigo" },
+  { minLevel: 7, maxLevel: 8, name: "눈송이", img: noonsongImg, gradient: "gradient-purple" },
 ];
 
 const CharacterPage = () => {
   const [character, setCharacter] = useState(null);
-  const [growthMissions, setGrowthMissions] = useState([]);
-  const [dailyMissions, setDailyMissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [feeding, setFeeding] = useState(false);
+  const [feedSuccess, setFeedSuccess] = useState(false);
+  
+  const fetchCharacterData = async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
+    try {
+      const data = await userAPI.getCharacterInfo();
+      console.log("📦 데이터 로드:", data);
+
+      setCharacter({
+        name: "눈송이",
+        level: data.characterLevel,
+        experience: data.feedCount,     
+        experienceToNext: 3,            
+        daysStreak: data.consecutiveDays,
+        totalPoints: data.rice,        
+        totalFed: data.feedCount,
+      });
+    } catch (error) {
+      console.error("❌ 로드 실패:", error);
+    } finally {
+      if (!isBackground) setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let ignore = false;
-
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const [characterInfo, growthList, missions] = await Promise.all([
-          userAPI.getCharacterInfo(),
-          userAPI.getGrowthMissions(),
-          userAPI.getDailyMissions(),
-        ]);
-
-        if (!ignore) {
-          setCharacter(characterInfo);
-          setGrowthMissions(growthList);
-          setDailyMissions(missions);
-        }
-      } catch (err) {
-        if (!ignore) {
-          setError(err);
-        }
-      } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
-      }
-    };
-
-    load();
-
-    return () => {
-      ignore = true;
-    };
+    fetchCharacterData();
   }, []);
-
-  const remainingExp = useMemo(() => {
-    if (!character) return 0;
-    return Math.max(character.experienceToNext - character.experience, 0);
-  }, [character]);
 
   const progressPercentage = useMemo(() => {
     if (!character) return 0;
-    if (character.experienceToNext === 0) return 0;
-    return Math.min(
-      Math.round((character.experience / character.experienceToNext) * 100),
-      100
-    );
+    return Math.min(Math.round((character.experience / 3) * 100), 100);
   }, [character]);
 
   const currentStage = useMemo(() => {
     if (!character) return CHARACTER_STAGES[0];
-    return (
-      CHARACTER_STAGES.find(
-        (stage) => character.level >= stage.minLevel && character.level <= stage.maxLevel
-      ) ?? CHARACTER_STAGES[CHARACTER_STAGES.length - 1]
-    );
+    return CHARACTER_STAGES.find(s => character.level >= s.minLevel && character.level <= s.maxLevel) ?? CHARACTER_STAGES[0];
   }, [character]);
 
-  const growthStages = useMemo(() => {
-  if (!character) return CHARACTER_STAGES;
-  return CHARACTER_STAGES.map((stage) => {
-    const mission = growthMissions.find(
-      (item) => item.level === stage.id || item.title === stage.name
-    );
-    return {
-      ...stage,
-      completed: mission?.completed ?? character.level > stage.maxLevel,
-    };
-  });
-}, [character, growthMissions]);
-
-
   const handleFeed = async () => {
-    if (!character || feeding || character.totalPoints <= 0) return;
+    console.log("👇 밥 주기 버튼 클릭!");
+
+    if (!character || feeding) return;
+
+    if (character.totalPoints < 1) {
+      alert("밥이 없어요! 게시글을 써서 밥을 모아보세요 🍚");
+      return;
+    }
 
     setFeeding(true);
+    setFeedSuccess(false);
+
+    // Optimistic Update
+    const prevCharacter = { ...character };
+    setCharacter((prev) => {
+      const nextExp = prev.experience + 1;
+      const isLevelUp = nextExp >= 3; 
+      return {
+        ...prev,
+        totalPoints: prev.totalPoints - 1,
+        experience: isLevelUp ? 0 : nextExp,
+        level: isLevelUp ? prev.level + 1 : prev.level,
+        totalFed: prev.totalFed + 1
+      };
+    });
+
     try {
-      const response = await userAPI.feedCharacter();
-      if (response?.success) {
-        setCharacter((prev) => {
-          if (!prev) return prev;
-
-          const updatedExperience = prev.experience + 1;
-          const updatedTotalPoints = Math.max(prev.totalPoints - 1, 0);
-          const updatedTotalFed = prev.totalFed + 1;
-
-          let experience = updatedExperience;
-          let level = prev.level;
-          let experienceToNext = prev.experienceToNext;
-
-          if (updatedExperience >= prev.experienceToNext) {
-            level = prev.level + 1;
-            experience = updatedExperience - prev.experienceToNext;
-            experienceToNext = Math.round(prev.experienceToNext * 1.2);
-          }
-
-          return {
-            ...prev,
-            experience,
-            level,
-            experienceToNext,
-            totalPoints: updatedTotalPoints,
-            totalFed: updatedTotalFed,
-          };
-        });
-      }
-    } catch (err) {
-      console.error(err);
-      alert("밥 주기 도중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      await userAPI.feedCharacter();
+      setFeedSuccess(true);
+      await fetchCharacterData(true); 
+      setTimeout(() => setFeedSuccess(false), 1000);
+    } catch (error) {
+      console.error("🔥 에러 발생:", error);
+      alert("오류가 발생했습니다.");
+      setCharacter(prevCharacter);
     } finally {
       setFeeding(false);
     }
   };
 
-  if (loading) {
-    return (
-      <section className="character-page">
-        <div className="character-page__container">캐릭터 정보를 불러오는 중입니다...</div>
-      </section>
-    );
-  }
-
-  if (error || !character) {
-    return (
-      <section className="character-page">
-        <div className="character-page__container">
-          캐릭터 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.
-        </div>
-      </section>
-    );
-  }
+  if (loading) return <div className="loading-container"><div className="loading-spinner">❄️</div></div>;
+  if (!character) return <div className="error-container">로딩 실패</div>;
 
   return (
-    <section className="character-page">
-      <div className="character-page__container">
-        <header className="character-page__header">
-          <h2>나의 캐릭터</h2>
-          <p>챗봇과 함께 성장하는 눈송이를 돌봐주세요.</p>
-        </header>
+    <div className="character-page">
+      <div className="character-container">
+        <div className="page-header">
+          <h1 className="page-title">나의 캐릭터</h1>
+        </div>
 
-        <div className="character-page__summary-card">
-          <div className="character-page__identity">
-            <img
-              className="character-page__avatar"
-              src={currentStage.image}
-              alt={`${currentStage.name} 단계 캐릭터`}
-            />
-            <div>
-              <h3>
-                {character.name}
-                <span className="character-page__level-chip">Lv.{character.level}</span>
-              </h3>
-              <p>{character.statusMessage}</p>
-              <p>오늘은 {character.personality} 상태예요.</p>
+        <div className="character-main-card">
+          <div className={`card-background ${currentStage.gradient}`}></div>
+          
+          <div className="character-info-section">
+            <div className="character-avatar-wrapper">
+              <div className="character-avatar">
+                <img src={currentStage.img} alt={currentStage.name} style={{width:"100%", height:"100%", objectFit:"contain"}}/>
+              </div>
+              <div className="character-level-badge">Lv.{character.level}</div>
+            </div>
+            <div className="character-details">
+              <h2 className="character-name">{character.name}</h2>
+              <div className="stat-card stat-purple"><p>보유 밥: <strong>{character.totalPoints}</strong>개</p></div>
             </div>
           </div>
 
-          <div className="character-page__badges">
-            <div className="character-page__badge character-page__badge--yellow">
-              <span className="character-page__badge-title">⭐ 연속 {character.daysStreak}일</span>
-              <span className="character-page__badge-desc">
-                꾸준히 접속하면 매일 밥을 1개 얻을 수 있어요!
-              </span>
+          <div className="progress-section">
+            <div className="progress-bar-wrapper">
+              <div className="progress-bar-fill" style={{ width: `${progressPercentage}%`, transition: "width 0.3s ease" }} />
             </div>
-            <div className="character-page__badge character-page__badge--purple">
-              <span className="character-page__badge-title">✨ 총 밥 급여</span>
-              <span className="character-page__badge-desc">
-                지금까지 {character.totalFed}번 밥을 먹였어요.
-              </span>
-            </div>
+            <p className="progress-description">다음 레벨까지 {3 - character.experience}번 남았어요</p>
+          </div>
+
+          {/* 🔥 버튼 디자인 적용됨 */}
+          <div className="button-container">
+            <button
+                onClick={handleFeed}
+                disabled={feeding}
+                className={`feed-button ${feeding ? 'feed-button-disabled' : ''} ${feedSuccess ? 'feed-button-success' : ''}`}
+            >
+                {feeding ? (
+                "⏳ 밥 주는 중..."
+                ) : feedSuccess ? (
+                "냠냠! 맛있어요 😋"
+                ) : (
+                `🍚 밥 주기 (밥 1개 소모)`
+                )}
+            </button>
           </div>
         </div>
-
-        <div className="character-page__progress">
-          <span className="character-page__progress-label">
-            다음 레벨까지 {remainingExp}번 남았어요!
-          </span>
-          <div className="character-page__progress-bar">
-            <div
-              className="character-page__progress-fill"
-              style={{ width: `${progressPercentage}%` }}
-            />
+        
+        {/* 하단 성장 과정 리스트 */}
+        <div className="content-grid">
+          <div className="content-card">
+             <h3 className="card-title">성장 과정</h3>
+             <div className="stages-list">
+               {CHARACTER_STAGES.map(s => (
+                 <div key={s.name} className={`stage-item ${character.level >= s.minLevel && character.level <= s.maxLevel ? 'stage-item-active' : ''}`}>
+                   <img src={s.img} alt="" style={{width:24, height:24, marginRight:8}}/>
+                   <span>{s.name}</span>
+                 </div>
+               ))}
+             </div>
           </div>
-          <button
-            type="button"
-            className="character-page__feed-button"
-            onClick={handleFeed}
-            disabled={character.totalPoints <= 0 || feeding}
-          >
-            {feeding ? "밥 주는 중..." : `밥 주기 🍚 (보유 ${character.totalPoints}개)`}
-          </button>
         </div>
-
-        <div className="character-page__columns">
-          <section className="character-card">
-            <div className="character-card__header">📈 성장 단계</div>
-            <div className="character-card__list">
-              {growthStages.map((stage) => {
-                const isActive =
-                  character.level >= stage.minLevel && character.level <= stage.maxLevel;
-                return (
-                  <div
-                    key={stage.name}
-                    className={`character-growth-item ${
-                      isActive ? "character-growth-item--active" : ""
-                    }`}
-                  >
-                    <div className="character-growth-item__info">
-                      <img
-                        className="character-growth-item__icon"
-                        src={stage.image}
-                        alt={stage.name}
-                      />
-                      <div className="character-growth-item__text">
-                        <span className="character-growth-item__stage">
-                          Lv.{stage.minLevel}-{stage.maxLevel}
-                        </span>
-                        <span>{stage.name}</span>
-                      </div>
-                    </div>
-                    {(isActive || stage.completed) && (
-                      <span className="character-growth-item__check">✔</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          <section className="character-card">
-            <div className="character-card__header">📅 밥 획득 방법</div>
-            <div className="character-card__list">
-              {dailyMissions.map((mission) => (
-                <div key={mission.id} className="character-mission">
-                  <span>
-                    {mission.icon} {mission.title}
-                  </span>
-                  <span>+{mission.points}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-
-        <footer className="character-page__rice-box">
-          <span>🍚 보유 밥</span>
-          <strong>{character.totalPoints}</strong>
-        </footer>
       </div>
-    </section>
+    </div>
   );
 };
 

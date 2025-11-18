@@ -101,7 +101,11 @@ export default function ChatPage() {
    * ---------------------------------------------------- */
   const handleCreateSession = async () => {
     try {
-      const newSession = await chatAPI.createSession("새로운 대화");
+      const today = new Date().toISOString().slice(0, 10);
+      const title = `${today} 대화`;
+
+      const newSession = await chatAPI.createSession(title);
+
       setSessions((prev) => [newSession, ...prev]);
       setCurrentSessionId(newSession.sessionId);
       setMessages([]);

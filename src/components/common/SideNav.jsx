@@ -4,13 +4,14 @@ import "./SideNav.css";
 
 export default function SideNav({ user, onLogout }) {
   const navLinkClass = ({ isActive }) => (isActive ? "active" : "");
-  
-  const displayName =
-    user?.nickname ||
-    user?.username ||
-    user?.email ||
-    "사용자";
-  const profileImage = user?.profileImage || user?.avatarUrl || null;
+
+  const displayName = user?.nickname || "사용자";
+
+  const profileImage =
+    user?.profileImageUrl ||
+    user?.profileImage ||
+    user?.avatarUrl ||
+    null;
 
   return (
     <aside className="side-nav">
@@ -26,6 +27,7 @@ export default function SideNav({ user, onLogout }) {
         </div>
         <span className="username">{displayName}</span>
       </div>
+
       <nav>
         <ul>
           <li>

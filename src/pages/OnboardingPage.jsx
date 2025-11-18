@@ -152,23 +152,11 @@ const OnboardingPage = () => {
 
       // 3) 회원가입 API 호출
       const signupResult = await signup(signupPayload);
-      console.log("✅ [OnboardingPage] 회원가입 성공:", signupResult);
-
-      // 4) 자동 로그인
-      console.log("🔵 [OnboardingPage] 자동 로그인 시도");
-      const loginResult = await login({
-        username: signupInfo.username,
-        password: signupInfo.password,
-      });
-      console.log("✅ [OnboardingPage] 자동 로그인 성공:", loginResult);
-
-      // 5) 성공 메시지 및 리다이렉트
+      // 성공 메시지 
       alert("회원가입이 완료되었습니다! 환영합니다 😊");
-      console.log("🔵 [OnboardingPage] /chat으로 이동");
-      navigate("/chat", { replace: true });
+      navigate("/login", { replace: true });
       
     } catch (err) {
-      console.error("❌ [OnboardingPage] 온보딩/회원가입 실패:", err);
       
       let errorMessage = "회원가입 중 오류가 발생했습니다.";
       

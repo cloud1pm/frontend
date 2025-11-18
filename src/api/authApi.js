@@ -77,19 +77,17 @@ export const login = async ({ username, password }) => {
 
     console.log("✅ [login API] 응답:", data);
 
-    // 백엔드 응답 구조 확인
     if (!data) {
       throw new Error("응답 데이터가 없습니다.");
     }
 
-
-    // 백엔드가 { token, userId } 형태로 응답
+    // ⭐ 수정된 부분: nickname이 없으면 username을 nickname으로 사용
     const result = {
       token: data.token || data.accessToken,
       user: {
         id: data.userId,
-        nickname: data.nickname || data.user?.nickname,
-        isOnboarded: true, // 로그인 성공 = 온보딩 완료
+        nickname: data.nickname || username,   // ← 여기 중요!
+        isOnboarded: true,
       },
     };
 
@@ -103,12 +101,9 @@ export const login = async ({ username, password }) => {
     return result;
   } catch (error) {
     console.error("❌ [login API] 오류:", error.response?.data || error.message);
-    
-    // 에러를 그대로 throw하여 상위에서 처리
     throw error;
   }
 };
-
 // ------------------------------
 // ⭐ 현재 사용자 정보 가져오기 (선택적)
 // ------------------------------
@@ -153,7 +148,7 @@ export const signup = async (payload) => {
     // profileImageUrl 기본값 설정
     const signupData = {
       ...payload,
-      profileImageUrl: payload.profileImageUrl || "/default/user_profile.png"
+      profileImageUrl: payload.profileImageUrl || "./user_profile.jpeg"
     };
 
     console.log("🔵 [signup API] 최종 요청 데이터:", signupData);

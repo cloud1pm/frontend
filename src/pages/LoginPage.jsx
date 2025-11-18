@@ -31,24 +31,18 @@ const LoginPage = () => {
     setError(null);
     setIsSubmitting(true);
 
-    console.log("🔵 [LoginPage] 로그인 시도:", form);
-
     try {
       const res = await login({
         username: form.username,
         password: form.password,
       });
-
-      console.log("✅ [LoginPage] 로그인 성공:", res);
       
       // navigate는 useEffect에서 자동으로 처리됨
       // 하지만 만약을 위해 명시적으로도 추가
       if (res && res.token && res.user) {
-        console.log("✅ [LoginPage] 수동으로 /chat 이동");
         navigate("/chat", { replace: true });
       }
     } catch (err) {
-  console.error("❌ [LoginPage] 로그인 실패:", err);
 
   let backendMsg =
     err.response?.data?.message ||
@@ -65,7 +59,10 @@ const LoginPage = () => {
   }
 
   setError(errorMessage);
-} 
+  setForm({ username: "", password: "" })
+} finally {
+      setIsSubmitting(false);
+}
 }
 
   const handleGoogleSuccess = async (credentialResponse) => {

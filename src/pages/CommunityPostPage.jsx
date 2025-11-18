@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { communityAPI } from "../api/communityApi";
+import { useAuth } from "../context/AuthContext";   // 🔥 AuthContext로 현재 사용자 불러오기
 import "./CommunityPostPage.css";
 
 const timeFormat = (t) => {
@@ -24,7 +25,7 @@ export default function CommunityPostPage() {
   const [commentText, setCommentText] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const currentUser = JSON.parse(localStorage.getItem("mockAuthToken"))?.user;
+  const { user: currentUser } = useAuth(); // 현재 로그인 사용자 정보
 
   const fetchPost = async () => {
     setLoading(true);
@@ -95,7 +96,10 @@ export default function CommunityPostPage() {
     <section className="community-post-page">
       <div className="community-post-page__container">
 
-        <button className="community-post-page__back" onClick={() => navigate("/community")}>
+        <button
+          className="community-post-page__back"
+          onClick={() => navigate("/community")}
+        >
           ← 목록으로 돌아가기
         </button>
 
@@ -103,6 +107,7 @@ export default function CommunityPostPage() {
 
         {!loading && post && (
           <>
+            {/* 게시글 정보 */}
             <article className="community-post-page__meta">
               <h1 className="community-post-page__title">{post.title}</h1>
 
@@ -116,17 +121,23 @@ export default function CommunityPostPage() {
               </div>
 
               <div className="community-post-page__footer">
-                <button className="community-post-page__like-button" onClick={handleLike}>
+                <button
+                  className="community-post-page__like-button"
+                  onClick={handleLike}
+                >
                   {isLiked ? "❤️" : "🤍"} {post.likes}
                 </button>
                 <span>💬 {commentList.length}</span>
               </div>
 
-              {currentUser?.username === post.nickname && (
+              {/* 게시글 작성자 본인이면 글 수정/삭제 버튼 표시 */}
+              {currentUser?.nickname === post.nickname && (
                 <div className="community-post-page__actions">
                   <button
                     className="community-post-page__edit-button"
-                    onClick={() => navigate(`/community/edit/${postId}`, { state: { post } })}
+                    onClick={() =>
+                      navigate(`/community/edit/${postId}`, { state: { post } })
+                    }
                   >
                     수정
                   </button>
@@ -152,15 +163,18 @@ export default function CommunityPostPage() {
               <div className="community-post-page__comments-list">
                 {commentList.map((c) => (
                   <div key={c.id} className="community-comment">
+
+                    {/* 댓글 헤더 */}
                     <div className="community-comment__header">
                       <span className="community-comment__author">
-                        {c.author || c.authorName}
+                        {c.authorName}
                       </span>
 
                       <div className="community-comment__meta">
-                        <span>{timeFormat(c.timestamp || c.createdAt)}</span>
+                        <span>{timeFormat(c.createdAt)}</span>
 
-                        {currentUser?.nickname === (post.authorName) && (
+                        {/* 🔥 내 댓글일 때만 삭제 버튼 표시 */}
+                        {currentUser?.nickname === c.authorName && (
                           <button
                             className="community-comment__delete"
                             onClick={() => handleCommentDelete(c.id)}
@@ -171,6 +185,7 @@ export default function CommunityPostPage() {
                       </div>
                     </div>
 
+                    {/* 댓글 내용 */}
                     <p className="community-comment__content">{c.content}</p>
                   </div>
                 ))}
@@ -185,7 +200,10 @@ export default function CommunityPostPage() {
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                 />
-                <button className="community-post-page__comment-submit" onClick={handleCommentSubmit}>
+                <button
+                  className="community-post-page__comment-submit"
+                  onClick={handleCommentSubmit}
+                >
                   댓글 작성하기
                 </button>
               </div>
