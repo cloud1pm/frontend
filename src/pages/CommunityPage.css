@@ -110,10 +110,9 @@
   font-weight: 600;
   color: #111827;
 }
-
 .community-page__posts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: 1fr; /* ⭐ 한 줄에 하나 */
   gap: 20px;
 }
 
@@ -155,14 +154,6 @@
   height: 32px;
   border-radius: 10px;
   background: linear-gradient(135deg, #38bdf8, #6366f1);
-}
-
-.community-post-card__title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 8px 0;
-  line-height: 1.4;
 }
 
 .community-post-card__content {
@@ -285,3 +276,4 @@
     grid-template-columns: 1fr;
   }
 }
+

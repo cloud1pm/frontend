@@ -9,6 +9,13 @@ const COMMUNITY_TABS = [
   { id: "recent", label: "최신글" },
   { id: "my-posts", label: "내 작성글" },
 ];
+const formatDate = (iso) =>
+  new Date(iso).toLocaleString("ko-KR", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 const buildPagination = (currentPage, totalPages) => {
   if (totalPages <= 1) return [1];
@@ -169,19 +176,18 @@ export default function CommunityPage() {
                             <div className="community-post-card__avatar" />
 
                             {/* ✔ username 최우선 */}
-                            <span>{post.username || post.nickname || post.authorName}</span>
+                            <span>{post.authorName}</span>
                           </div>
-                          <span>{post.date}</span>
+                          <span>{formatDate(post.createdAt)}</span>
                         </div>
 
                         <h3 className="community-post-card__title">{post.title}</h3>
 
-                        <p className="community-post-card__content">{post.content}</p>
+                        <p className="community-post-card__content"><span>{formatDate(post.createdAt)}</span></p>
 
                         <div className="community-post-card__footer">
-                          {/* ✔ 좋아요(❤️), 댓글(💬) 표시 */}
-                          <span>❤️ {post.likes}</span>
-                          <span>💬 {post.comments}</span>
+                          <span>❤️ {post.likeCount}</span>
+                          <span>💬 {post.commentCount}</span>
                         </div>
                       </article>
                     ))}

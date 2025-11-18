@@ -115,12 +115,13 @@ export default function SignupPage() {
           </div>
 
           <div className="auth-field">
-            <label className="auth-label">유저네임</label>
+            
+            <label className="auth-label">아이디</label>
             <input
               type="text"
               name="username"
               className="auth-input"
-              placeholder="testuser1"
+              placeholder="로그인할 아이디를 입력해주세요."
               value={form.username}
               onChange={handleChange}
               required
@@ -138,7 +139,7 @@ export default function SignupPage() {
               type="text"
               name="nickname"
               className="auth-input"
-              placeholder="테스터"
+              placeholder="앱에서 사용할 닉네임을 입력해주세요."
               value={form.nickname}
               onChange={handleChange}
               required

@@ -57,7 +57,7 @@ const LoginPage = () => {
     "";
 
   // 정확한 조건 처리
-  let errorMessage = "잘못된 유저네임 또는 비밀번호입니다.";
+  let errorMessage = "잘못된 아이디 또는 비밀번호입니다.";
 
   // 서버 연결 문제일 때만 별도 처리
   if (err.request && !err.response) {
@@ -110,7 +110,7 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="auth-field">
-            <label className="auth-label">유저네임</label>
+            <label className="auth-label">아이디</label>
             <input
               type="text"
               name="username"

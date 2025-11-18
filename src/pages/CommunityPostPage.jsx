@@ -19,14 +19,13 @@ export default function CommunityPostPage() {
   const navigate = useNavigate();
 
   const [post, setPost] = useState(null);
-  const [commentList, setCommentList] = useState([]); // 댓글 배열로 따로 관리
+  const [commentList, setCommentList] = useState([]);
   const [isLiked, setIsLiked] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [loading, setLoading] = useState(true);
 
   const currentUser = JSON.parse(localStorage.getItem("mockAuthToken"))?.user;
 
-  // 게시글 + 댓글 로딩
   const fetchPost = async () => {
     setLoading(true);
     try {
@@ -35,8 +34,9 @@ export default function CommunityPostPage() {
 
       setPost(postData);
       setIsLiked(postData.isLiked);
-      setCommentList(commentsData || []); // 댓글 배열
+      setCommentList(commentsData || []);
     } catch (err) {
+      console.error(err);
       alert("게시글을 불러오지 못했어요.");
     } finally {
       setLoading(false);
@@ -47,7 +47,6 @@ export default function CommunityPostPage() {
     fetchPost();
   }, [postId]);
 
-  // 좋아요 토글
   const handleLike = async () => {
     try {
       await communityAPI.likePost(postId);
@@ -57,7 +56,6 @@ export default function CommunityPostPage() {
     }
   };
 
-  // 댓글 작성
   const handleCommentSubmit = async () => {
     if (!commentText.trim()) return;
 
@@ -70,19 +68,17 @@ export default function CommunityPostPage() {
     }
   };
 
-  // 댓글 삭제
   const handleCommentDelete = async (commentId) => {
     if (!window.confirm("댓글을 삭제하시겠어요?")) return;
 
     try {
-      await communityAPI.deleteComment(postId, commentId);
+      await communityAPI.deleteComment(commentId);
       fetchPost();
     } catch (err) {
       alert("댓글 삭제 실패");
     }
   };
 
-  // 게시글 삭제
   const handlePostDelete = async () => {
     if (!window.confirm("정말 삭제할까요?")) return;
 
@@ -98,10 +94,8 @@ export default function CommunityPostPage() {
   return (
     <section className="community-post-page">
       <div className="community-post-page__container">
-        <button
-          className="community-post-page__back"
-          onClick={() => navigate("/community")}
-        >
+
+        <button className="community-post-page__back" onClick={() => navigate("/community")}>
           ← 목록으로 돌아가기
         </button>
 
@@ -117,27 +111,22 @@ export default function CommunityPostPage() {
                 <span>{timeFormat(post.createdAt)}</span>
               </div>
 
-              <div className="community-post-page__content">{post.fullContent || post.content}</div>
+              <div className="community-post-page__content">
+                {post.fullContent || post.content}
+              </div>
 
               <div className="community-post-page__footer">
-                <button
-                  className="community-post-page__like-button"
-                  onClick={handleLike}
-                >
+                <button className="community-post-page__like-button" onClick={handleLike}>
                   {isLiked ? "❤️" : "🤍"} {post.likes}
                 </button>
                 <span>💬 {commentList.length}</span>
               </div>
 
-              {currentUser?.nickname === post.nickname && (
+              {currentUser?.username === post.nickname && (
                 <div className="community-post-page__actions">
                   <button
                     className="community-post-page__edit-button"
-                    onClick={() =>
-                      navigate(`/community/edit/${postId}`, {
-                        state: { post },
-                      })
-                    }
+                    onClick={() => navigate(`/community/edit/${postId}`, { state: { post } })}
                   >
                     수정
                   </button>
@@ -154,7 +143,7 @@ export default function CommunityPostPage() {
 
             <div className="community-post-page__divider" />
 
-            {/* 댓글 리스트 */}
+            {/* 댓글 영역 */}
             <section className="community-post-page__comments-section">
               <h2 className="community-post-page__comments-header">
                 댓글 {commentList.length}개
@@ -164,14 +153,14 @@ export default function CommunityPostPage() {
                 {commentList.map((c) => (
                   <div key={c.id} className="community-comment">
                     <div className="community-comment__header">
-                      <div className="community-comment__author">
-                        <span>{c.author || c.authorName}</span>
-                      </div>
+                      <span className="community-comment__author">
+                        {c.author || c.authorName}
+                      </span>
 
                       <div className="community-comment__meta">
                         <span>{timeFormat(c.timestamp || c.createdAt)}</span>
 
-                        {currentUser?.nickname === (c.author || c.authorName) && (
+                        {currentUser?.nickname === (post.authorName) && (
                           <button
                             className="community-comment__delete"
                             onClick={() => handleCommentDelete(c.id)}
@@ -196,10 +185,7 @@ export default function CommunityPostPage() {
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                 />
-                <button
-                  className="community-post-page__comment-submit"
-                  onClick={handleCommentSubmit}
-                >
+                <button className="community-post-page__comment-submit" onClick={handleCommentSubmit}>
                   댓글 작성하기
                 </button>
               </div>

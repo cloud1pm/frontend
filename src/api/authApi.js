@@ -82,12 +82,13 @@ export const login = async ({ username, password }) => {
       throw new Error("응답 데이터가 없습니다.");
     }
 
+
     // 백엔드가 { token, userId } 형태로 응답
     const result = {
       token: data.token || data.accessToken,
       user: {
         id: data.userId,
-        username: username, // 요청에서 사용한 username 재사용
+        nickname: data.nickname || data.user?.nickname,
         isOnboarded: true, // 로그인 성공 = 온보딩 완료
       },
     };
