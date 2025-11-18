@@ -13,7 +13,7 @@ const PostEditorPage = () => {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [selectedEmotion, setSelectedEmotion] = useState(null);
+  const [selectedEmotion, setSelectedEmotion] = useState(null); // index 기반
   const [uploadFile, setUploadFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -23,7 +23,11 @@ const PostEditorPage = () => {
       const { post } = location.state;
       setTitle(post.title || "");
       setContent(post.content || "");
-      setSelectedEmotion(post.emotion || null);
+
+      // emotion이 index 라고 가정
+      setSelectedEmotion(
+        typeof post.emotion === "number" ? post.emotion : null
+      );
     }
   }, [isEditMode, location.state]);
 
@@ -47,19 +51,17 @@ const PostEditorPage = () => {
       const payload = {
         title: title.trim(),
         content: content.trim(),
-        emotion: selectedEmotion,
+        emotion: selectedEmotion, // index 번호 전달
         image: uploadFile,
       };
 
       if (isEditMode) {
-        // 수정 모드
         const response = await communityAPI.updatePost(postId, payload);
         if (response?.success) {
           alert("게시글이 수정되었습니다!");
           navigate(`/community/post/${postId}`, { state: { refresh: true } });
         }
       } else {
-        // 작성 모드
         const response = await communityAPI.createPost(payload);
         if (response?.success) {
           alert("게시글이 등록되었습니다! 밥 1개를 획득했습니다 🍚");
@@ -68,7 +70,7 @@ const PostEditorPage = () => {
       }
     } catch (error) {
       console.error(error);
-      alert(`게시글 ${isEditMode ? '수정' : '등록'}에 실패했습니다. 잠시 후 다시 시도해주세요.`);
+      alert(`게시글 ${isEditMode ? "수정" : "등록"}에 실패했습니다. 잠시 후 다시 시도해주세요.`);
     } finally {
       setSubmitting(false);
     }
@@ -94,18 +96,22 @@ const PostEditorPage = () => {
             <div>
               <h4>지금 느끼는 감정</h4>
               <div className="post-editor-emotions__list">
-                {EMOTIONS.map((emotion) => (
+                {EMOTIONS.map((emotion, index) => (
                   <label
-                    key={emotion}
+                    key={index}
                     className={`post-editor-emotions__item ${
-                      selectedEmotion === emotion ? "post-editor-emotions__item--active" : ""
+                      selectedEmotion === index
+                        ? "post-editor-emotions__item--active"
+                        : ""
                     }`}
                   >
                     <input
                       type="checkbox"
-                      checked={selectedEmotion === emotion}
+                      checked={selectedEmotion === index}
                       onChange={() =>
-                        setSelectedEmotion((prev) => (prev === emotion ? null : emotion))
+                        setSelectedEmotion((prev) =>
+                          prev === index ? null : index
+                        )
                       }
                     />
                     {emotion}
@@ -132,7 +138,13 @@ const PostEditorPage = () => {
                 onClick={handleSubmit}
                 disabled={isSubmitDisabled}
               >
-                {submitting ? (isEditMode ? "수정 중..." : "등록 중...") : (isEditMode ? "수정하기" : "등록하기")}
+                {submitting
+                  ? isEditMode
+                    ? "수정 중..."
+                    : "등록 중..."
+                  : isEditMode
+                  ? "수정하기"
+                  : "등록하기"}
               </button>
             </div>
 
