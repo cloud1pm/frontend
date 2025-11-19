@@ -7,7 +7,7 @@ import {
   login as loginApi,
   signup as signupApi,
   logout as logoutApi,
-  googleLogin as googleLoginApi,
+  handleGoogleCallback as googleLoginApi,
   completeOnboarding as completeOnboardingApi,
   getStoredSession,
   clearStoredSession,

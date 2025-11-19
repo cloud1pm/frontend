@@ -3,8 +3,6 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { communityAPI } from "../api/communityApi";
 import "./PostEditorPage.css";
 
-const EMOTIONS = ["😊 기쁨", "😢 슬픔", "😡 분노", "😨 불안", "😐 무감정"];
-
 const PostEditorPage = () => {
   const navigate = useNavigate();
   const { postId } = useParams();
@@ -13,7 +11,6 @@ const PostEditorPage = () => {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [selectedEmotion, setSelectedEmotion] = useState(null); // index 기반
   const [uploadFile, setUploadFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -23,11 +20,6 @@ const PostEditorPage = () => {
       const { post } = location.state;
       setTitle(post.title || "");
       setContent(post.content || "");
-
-      // emotion이 index 라고 가정
-      setSelectedEmotion(
-        typeof post.emotion === "number" ? post.emotion : null
-      );
     }
   }, [isEditMode, location.state]);
 
@@ -39,7 +31,6 @@ const PostEditorPage = () => {
   const handleReset = () => {
     setTitle("");
     setContent("");
-    setSelectedEmotion(null);
     setUploadFile(null);
   };
 
@@ -51,7 +42,6 @@ const PostEditorPage = () => {
       const payload = {
         title: title.trim(),
         content: content.trim(),
-        emotion: selectedEmotion, // index 번호 전달
         image: uploadFile,
       };
 
@@ -92,42 +82,13 @@ const PostEditorPage = () => {
         </header>
 
         <div className="post-editor-page__body">
-          <aside className="post-editor-emotions">
-            <div>
-              <h4>지금 느끼는 감정</h4>
-              <div className="post-editor-emotions__list">
-                {EMOTIONS.map((emotion, index) => (
-                  <label
-                    key={index}
-                    className={`post-editor-emotions__item ${
-                      selectedEmotion === index
-                        ? "post-editor-emotions__item--active"
-                        : ""
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedEmotion === index}
-                      onChange={() =>
-                        setSelectedEmotion((prev) =>
-                          prev === index ? null : index
-                        )
-                      }
-                    />
-                    {emotion}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="post-editor-guide">
-              <h5>✏️ 글쓰기 가이드</h5>
-              <ul>
-                <li>진솔한 나의 감정을 나눠주세요.</li>
-                <li>타인을 비하하거나 상처주는 표현은 삼가주세요.</li>
-                <li>개인정보(전화번호, 주소)는 공개하지 마세요.</li>
-              </ul>
-            </div>
+          <aside className="post-editor-guide">
+            <h5>✏️ 글쓰기 가이드</h5>
+            <ul>
+              <li>진솔한 나의 감정을 나눠주세요.</li>
+              <li>타인을 비하하거나 상처주는 표현은 삼가주세요.</li>
+              <li>개인정보(전화번호, 주소)는 공개하지 마세요.</li>
+            </ul>
           </aside>
 
           <div className="post-editor-form">

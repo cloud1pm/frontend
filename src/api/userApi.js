@@ -75,12 +75,11 @@ export const getCharacterInfo = async () => {
  * 동작:
  * - rice 1 감소
  * - feedCount 1 증가
- * - feedCount가 3의 배수가 되면 characterLevel 1 증가
+ * - 경험치 증가 및 레벨 업 처리 
  * 
  * 응답: 없음 (성공 시 200 OK)
  */
 export const feedCharacter = async () => {
-  // 빈 객체를 전달하여 Content-Type: application/json 헤더 포함
   const { data } = await axiosInstance.post("/user/feed-character", {});
   return data;
 };

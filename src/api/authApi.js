@@ -81,12 +81,11 @@ export const login = async ({ username, password }) => {
       throw new Error("응답 데이터가 없습니다.");
     }
 
-    // ⭐ 수정된 부분: nickname이 없으면 username을 nickname으로 사용
     const result = {
       token: data.token || data.accessToken,
       user: {
         id: data.userId,
-        nickname: data.nickname || username,   // ← 여기 중요!
+        nickname: data.nickname || username,
         isOnboarded: true,
       },
     };
@@ -104,8 +103,9 @@ export const login = async ({ username, password }) => {
     throw error;
   }
 };
+
 // ------------------------------
-// ⭐ 현재 사용자 정보 가져오기 (선택적)
+// ⭐ 현재 사용자 정보 가져오기
 // ------------------------------
 export const getCurrentUser = async () => {
   console.log("🔵 [getCurrentUser API] 요청");
@@ -118,7 +118,7 @@ export const getCurrentUser = async () => {
     console.error("❌ [getCurrentUser API] 오류:", error.response?.data || error.message);
     throw error;
   }
-};;
+};
 
 // ------------------------------
 // ⭐ 회원가입
@@ -136,16 +136,15 @@ export const signup = async (payload) => {
       id: Date.now(),
       email: payload.email,
       username: payload.username,
-      nickname: payload.nickname ,
+      nickname: payload.nickname,
       password: payload.password,
-      isOnboarded: true, // riskSolutions 포함하므로 온보딩 완료
+      isOnboarded: true,
     };
     writeUsers([...users, newUser]);
     return mockResponse({ message: "회원가입 성공", userId: newUser.id });
   }
 
   try {
-    // profileImageUrl 기본값 설정
     const signupData = {
       ...payload,
       profileImageUrl: payload.profileImageUrl || "./user_profile.jpeg"
@@ -156,7 +155,6 @@ export const signup = async (payload) => {
     const { data } = await authAxios.post("/api/user/signup", signupData);
     console.log("✅ [signup API] 응답:", data);
     
-    // 백엔드 응답이 { message, userId } 또는 빈 응답일 수 있음
     return data || { message: "회원가입 성공" };
   } catch (error) {
     console.error("❌ [signup API] 오류:", error.response?.data || error.message);
@@ -165,44 +163,54 @@ export const signup = async (payload) => {
 };
 
 // ------------------------------
-// ⭐ 구글 로그인
+// ⭐ 구글 로그인 (리다이렉트 방식)
 // ------------------------------
-export const googleLogin = async (googleIdToken) => {
-  console.log("🔵 [googleLogin API] 요청");
+export const initiateGoogleLogin = () => {
+  console.log("🔵 [initiateGoogleLogin] 구글 로그인 시작");
+  
+  // 백엔드의 OAuth2 엔드포인트로 리다이렉트
+  window.location.href = "http://localhost:8080/oauth2/authorization/google";
+};
 
-  if (USE_MOCK_API) {
-    const mockUser = {
-      id: Date.now(),
-      email: "google@example.com",
-      nickname: "GoogleUser",
-      isOnboarded: false,
-    };
-    return mockResponse(
-      persistSession({
-        token: `mock-google-${mockUser.id}`,
-        user: mockUser,
-      })
-    );
+// ------------------------------
+// ⭐ 구글 로그인 콜백 처리 (토큰 추출)
+// ------------------------------
+export const handleGoogleCallback = (token) => {
+  console.log("🔵 [handleGoogleCallback] 토큰 받음:", token);
+
+  if (!token) {
+    throw new Error("토큰이 없습니다.");
   }
 
-  try {
-    const { data } = await authAxios.post("/api/auth/google-login", {
-      idToken: googleIdToken,
+  // 토큰으로 사용자 정보 가져오기
+  return getCurrentUser()
+    .then((userData) => {
+      const result = {
+        token: token,
+        user: {
+          id: userData.userId || userData.id,
+          nickname: userData.nickname || userData.username,
+          email: userData.email,
+          isOnboarded: userData.isOnboarded || true,
+        },
+      };
+
+      console.log("✅ [handleGoogleCallback] 정규화된 결과:", result);
+      return result;
+    })
+    .catch((error) => {
+      console.error("❌ [handleGoogleCallback] 사용자 정보 가져오기 실패:", error);
+      
+      // 사용자 정보를 못 가져와도 토큰은 반환
+      return {
+        token: token,
+        user: {
+          id: null,
+          nickname: "사용자",
+          isOnboarded: false,
+        },
+      };
     });
-    
-    console.log("✅ [googleLogin API] 응답:", data);
-
-    const result = {
-      token: data.token || data.accessToken || data.data?.token,
-      user: data.user || data.data?.user || data,
-    };
-
-    console.log("✅ [googleLogin API] 정규화된 결과:", result);
-    return result;
-  } catch (error) {
-    console.error("❌ [googleLogin API] 오류:", error.response?.data || error.message);
-    throw error;
-  }
 };
 
 // ------------------------------
