@@ -30,10 +30,29 @@ export const getRiskSolutions = async ({ riskLevel } = {}) => {
 /**
  * 응원 메시지 저장
  * POST /api/user/encouragement
- */
-export const saveEncouragement = async ({ message }) => {
-  const { data } = await axiosInstance.post("/user/encouragement", { message });
-  return data;
+**/
+export const saveEncouragement = async ({ message, emotion }) => {
+  console.log("🔵 [saveEncouragement] 요청 시작");
+  console.log("📝 Message:", message);
+  console.log("😊 Emotion:", emotion);
+  
+  try {
+
+    const { data } = await axiosInstance.post("/user/encouragement", { 
+      message, 
+      emotion 
+    });
+    
+    console.log("✅ [saveEncouragement] 응답:", data);
+    return data;
+  } catch (error) {
+    console.error("❌ [saveEncouragement] 실패");
+    console.error("요청 URL:", error.config?.url);
+    console.error("요청 데이터:", error.config?.data);
+    console.error("응답 상태:", error.response?.status);
+    console.error("응답 데이터:", error.response?.data);
+    throw error;
+  }
 };
 
 /**

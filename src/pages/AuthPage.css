@@ -155,3 +155,26 @@
   }
 }
 
+/* --- 중복 확인 버튼 (작게) --- */
+.auth-check-btn {
+  padding: 8px 12px;
+  font-size: 13px;
+  border: none;
+  border-radius: 8px;
+  background: #7c3aed;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.auth-check-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(99, 102, 241, 0.25);
+}
+
+.auth-check-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}

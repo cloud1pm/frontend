@@ -41,7 +41,6 @@ export const checkUsername = async (username) => {
     });
     return res.data; // true or false
   } catch (error) {
-    console.error("❌ username 중복 체크 오류", error);
     return false;
   }
 };

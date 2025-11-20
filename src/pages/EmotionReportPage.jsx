@@ -74,7 +74,7 @@ const EmotionReportPage = () => {
     return data;
   };
 
-  // ✔ 감정 점수는 백엔드의 -1.0 ~ 1.0 스케일 그대로 사용
+  // ✔ 감정 점수는 백엔드의 -1.0 ~ 1.0 스케일 사용
   const normalizeScore = (value) => {
   if (value === null || value === undefined) return 0;
   return Number(value) * 10;   // -1~1 → -10~10 변환

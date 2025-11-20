@@ -16,30 +16,30 @@ const OAuth2RedirectPage = () => {
         const token = url.searchParams.get("token");
 
         if (!token) {
-          console.error("❌ OAuth Redirect: token 없음");
+          //console.error("OAuth Redirect: token 없음");
           setError("인증 토큰을 받지 못했습니다.");
           setTimeout(() => navigate("/login", { replace: true }), 2000);
           return;
         }
 
-        console.log("🔵 [OAuth2Redirect] 받은 토큰:", token);
+        //console.log("[OAuth2Redirect] 받은 토큰:", token);
 
         // AuthContext 처리 → 자동 세션 저장 + 사용자 정보 업데이트
         const session = await googleLogin(token);
         const user = session.user;
 
-        console.log("🔵 [OAuth2Redirect] 유저 정보:", user);
+        //console.log(" [OAuth2Redirect] 유저 정보:", user);
 
         // hasCompletedInitialSetup 체크
         if (user.hasCompletedInitialSetup === false || user.hasCompletedInitialSetup === null) {
-          console.log("⚠️ [OAuth2Redirect] 온보딩 미완료 → /onboarding 이동");
+          //console.log("[OAuth2Redirect] 온보딩 미완료 → /onboarding 이동");
           navigate("/onboarding", { replace: true });
         } else {
-          console.log("✅ [OAuth2Redirect] 온보딩 완료 → /chat 이동");
+         //console.log(" [OAuth2Redirect] 온보딩 완료 → /chat 이동");
           navigate("/chat", { replace: true });
         }
       } catch (err) {
-        console.error("❌ OAuth 처리 실패:", err);
+        //console.error(" OAuth 처리 실패:", err);
         setError(err.response?.data?.message || "로그인 처리 중 오류가 발생했습니다.");
         setTimeout(() => navigate("/login", { replace: true }), 2000);
       }

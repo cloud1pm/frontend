@@ -55,13 +55,13 @@ export default function ChatSidebar({
 
   return (
     <div className="chat-sidebar">
-      {/* 🔥 채팅 라인 = 열기/닫기 버튼이 위치하는 핵심 라인 */}
+      {/* 채팅 라인 = 열기/닫기 버튼이 위치하는 핵심 라인 */}
       <div className="chat-sidebar-header">
         <button className="chat-sidebar-new-btn" onClick={onCreateSession}>
           <FiPlus size={18} />
         </button>
 
-        {/* ◀ 닫기 버튼 */}
+        {/* 닫기 버튼 */}
         <button className="chat-sidebar-collapse-btn" onClick={onToggleSidebar}>
           <FiChevronLeft size={20} />
         </button>

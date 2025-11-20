@@ -8,7 +8,6 @@ const formatBackendPost = (post) => ({
   title: post.title,
   content: post.content,
   nickname: post.authorName,
-  profileImageUrl: post.authorProfileImage,
   likes: post.likeCount,
   comments: post.commentCount,
   isLiked: post.isLiked,

@@ -38,25 +38,21 @@ export default function CommunityPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 🟢 [변경] 변수명을 명확하게 'allPosts'로 생각하고 쓰되, 코드는 posts 유지
-  // 백엔드에서 받아온 '모든' 데이터를 저장합니다.
   const [posts, setPosts] = useState([]); 
   
   const [activeTab, setActiveTab] = useState(COMMUNITY_TABS[0].id);
   const [currentPage, setCurrentPage] = useState(1);
   
-  // totalPages는 이제 state가 아니라 posts 길이에 따라 자동 계산됨 (아래 useMemo 참고)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // 🟢 [추가] 전체 데이터(posts)를 기반으로 총 페이지 수 계산
+  //  [추가] 전체 데이터(posts)를 기반으로 총 페이지 수 계산
   const totalPages = useMemo(() => {
     if (posts.length === 0) return 1;
     return Math.ceil(posts.length / ITEMS_PER_PAGE);
   }, [posts]);
 
-  // 🟢 [추가] 현재 페이지에 보여줄 데이터만 '똑' 떼어내기 (Client-side Slicing)
   const visiblePosts = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -81,7 +77,6 @@ export default function CommunityPage() {
       setError(null);
 
       try {
-        // 🟢 [변경] currentPage는 백엔드에 안 보냅니다 (어차피 다 주니까). tab 정보만 전송.
         const response = await communityAPI.getPosts({ tab: activeTab });
 
         if (!ignore) {
@@ -111,8 +106,6 @@ export default function CommunityPage() {
     loadPosts();
     return () => { ignore = true; };
     
-    // 🟢 [중요] currentPage가 의존성 배열에서 빠졌습니다! 
-    // 페이지를 넘길 때마다 API를 다시 부르지 않기 위해서입니다.
   }, [activeTab, refreshKey]); 
 
   useEffect(() => {
@@ -133,14 +126,13 @@ export default function CommunityPage() {
     if (page === "next-ellipsis") return setCurrentPage((p) => Math.min(totalPages, p + 3));
     if (typeof page === "number" && page !== currentPage) {
         setCurrentPage(page);
-        // 페이지 이동 시 스크롤 맨 위로 (선택사항)
         window.scrollTo(0, 0);
     }
   };
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    setCurrentPage(1); // 탭 바뀌면 1페이지로 초기화
+    setCurrentPage(1); 
   };
 
   return (
@@ -192,12 +184,10 @@ export default function CommunityPage() {
               ) : (
                 <>
                   <h3 className="community-page__section-title">
-                    {/* (선택) 전체 갯수를 보여주면 좋습니다 */}
                     전체 {posts.length}개의 이야기
                   </h3>
 
                   <div className="community-page__posts">
-                    {/* 🟢 [변경] posts.map 대신 visiblePosts.map을 사용합니다 */}
                     {visiblePosts.map((post) => (
                       <article
                         key={post.id}

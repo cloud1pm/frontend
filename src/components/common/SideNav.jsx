@@ -17,13 +17,13 @@ export default function SideNav({ user, onLogout }) {
     <aside className="side-nav">
       <div className="profile">
         <div className="profile-pic">
-          {profileImage ? (
+          {/** {profileImage ? (
             <img src={profileImage} alt={displayName} />
-          ) : (
+           : ( 
             <div className="profile-pic-placeholder">
-              {displayName.charAt(0).toUpperCase()}
+             {displayName.charAt(0).toUpperCase()}
             </div>
-          )}
+          )}**/}
         </div>
         <span className="username">{displayName}</span>
       </div>

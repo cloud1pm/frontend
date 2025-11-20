@@ -1,6 +1,8 @@
+// CharacterPage.jsx - 최종 수정본 (요청사항 반영)
+
 import React, { useEffect, useState } from "react";
 import "./CharacterPage.css";
-import { userAPI } from "../api/userApi";
+import { userAPI } from "../api/userApi"; 
 
 // 이미지 Import
 import waterImg from "../assets/character/water.png";
@@ -21,12 +23,21 @@ const CharacterPage = () => {
   const [loading, setLoading] = useState(true);
   const [feeding, setFeeding] = useState(false);
   const [feedSuccess, setFeedSuccess] = useState(false);
+  const [error, setError] = useState(null);
+
+  // 현재 캐릭터 단계 계산
+  const currentStage = CHARACTER_STAGES.find(
+    (s) => character && character.level >= s.minLevel && character.level <= s.maxLevel
+  ) || CHARACTER_STAGES[0];
 
   // 상태 조회
   const fetchCharacterData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await userAPI.getCharacterInfo();
+      console.log("✅ 캐릭터 정보 로드:", data);
+      
       setCharacter({
         name: "눈송이",
         level: data.characterLevel,
@@ -36,6 +47,7 @@ const CharacterPage = () => {
       });
     } catch (error) {
       console.error("❌ 캐릭터 로드 실패:", error);
+      setError("캐릭터 정보를 불러올 수 없습니다.");
     } finally {
       setLoading(false);
     }
@@ -45,21 +57,14 @@ const CharacterPage = () => {
     fetchCharacterData();
   }, []);
 
-  // 현재 단계 계산
-  const currentStage =
-    (character &&
-      CHARACTER_STAGES.find(
-        (s) => character.level >= s.minLevel && character.level <= s.maxLevel
-      )) ||
-    CHARACTER_STAGES[0];
-
-  // 🍚 밥 주기 처리
+  // 밥 주기 핸들러
   const handleFeed = async () => {
     if (!character || feeding) return;
 
-    if (character.totalPoints < 1) {
-      alert("밥이 없어요! 게시글을 써서 밥을 모아보세요 🍚");
-      return;
+    // 밥이 부족할 때 메시지를 보여주기 위해 0 이하일 때 return
+    if (character.totalPoints <= 0) {
+      alert("밥이 부족합니다. 게시글, 댓글, 좋아요, 응원 메시지 작성으로 밥을 획득하세요.");
+      return; 
     }
 
     setFeeding(true);
@@ -82,30 +87,31 @@ const CharacterPage = () => {
         newRiceCount !== undefined ? newRiceCount : character.totalPoints - 1;
 
       setFeedSuccess(true);
-
-      setCharacter((prev) => ({
+      
+      const isLevelUp = updatedData.newLevel > character.level;
+      
+      setCharacter(prev => ({
         ...prev,
-        level: newLevel !== undefined ? newLevel : prev.level,
-        totalPoints: nextRice, // rice 감소 처리
-        totalFed: prev.totalFed + 1, // feedCount 증가
+        level: updatedData.newLevel,
+        totalPoints: updatedData.newRiceCount,
+        // 레벨업 시 feedCount를 0으로 리셋, 아니면 1 증가
+        totalFed: isLevelUp ? 0 : (prev.totalFed + 1), 
       }));
+      
+      alert(updatedData.message);
 
       setTimeout(() => setFeedSuccess(false), 1000);
+      
     } catch (error) {
       console.error("🔥 밥 주기 실패:", error);
-
+      
       const axiosError = error;
-
       if (axiosError.response) {
         const status = axiosError.response.status;
         const message = axiosError.response.data?.message;
 
-        if (status === 400 && message?.includes("밥이 부족")) {
-          alert(message);
-        } else if (status === 500) {
-          alert("🔥 서버 오류: 잠시 후 다시 시도해주세요.");
-        } else {
-          alert(`오류: ${message || status}`);
+        if (status !== 400) { 
+          alert(`오류가 발생했습니다: ${message || status}`);
         }
       } else if (axiosError.request) {
         alert("서버 응답이 없습니다. 네트워크를 확인해주세요.");
@@ -117,91 +123,246 @@ const CharacterPage = () => {
     }
   };
 
-  // 로딩 처리
-  if (loading)
+  // 로딩 상태
+  if (loading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner">❄️</div>
+      <div className="character-page">
+        <div className="character-container">
+          <div className="loading-container">
+            <div className="loading-spinner">❄️</div>
+            <p className="loading-text">캐릭터 정보를 불러오는 중...</p>
+          </div>
+        </div>
       </div>
     );
+  }
 
-  if (!character)
-    return <div className="error-container">캐릭터 정보를 불러올 수 없습니다.</div>;
+  // 에러 상태
+  if (error || !character) {
+    return (
+      <div className="character-page">
+        <div className="character-container">
+          <div className="error-container">
+            <div className="error-icon">😢</div>
+            <p className="error-text">{error || "캐릭터 정보를 불러올 수 없습니다."}</p>
+            <button className="retry-button" onClick={fetchCharacterData}>
+              다시 시도
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 밥 주기 횟수 (5번당 레벨업)
+  const feedCountToLevelUp = 5; 
+  const currentFed = character.totalFed % feedCountToLevelUp;
+  const progressPercent = (currentFed / feedCountToLevelUp) * 100;
+  const remainingFeeds = feedCountToLevelUp - currentFed;
 
   return (
     <div className="character-page">
       <div className="character-container">
         <div className="page-header">
           <h1 className="page-title">나의 캐릭터</h1>
+          <p className="page-subtitle">💧 물방울에서 눈송이로 성장하는 여정</p>
         </div>
 
+        {/* 1. 메인 캐릭터 카드 (이미지, 이름, 레벨, 버튼) */}
         <div className="character-main-card">
           <div className={`card-background ${currentStage.gradient}`}></div>
 
           <div className="character-info-section">
-            <div className="character-avatar-wrapper">
+            {/* 중앙으로 이동한 큰 캐릭터 이미지 */}
+            <div className="character-avatar-wrapper large-avatar">
               <div className="character-avatar">
-                <img
-                  src={currentStage.img}
-                  alt={currentStage.name}
-                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                <img 
+                  src={currentStage.img} 
+                  alt={currentStage.name} 
+                  style={{
+                    width: "100%", 
+                    height: "100%", 
+                    objectFit: "contain"
+                  }}
                 />
               </div>
-              <div className="character-level-badge">Lv.{character.level}</div>
+            </div>
+            
+            {/* 캐릭터 이름 및 레벨 */}
+            <div className="character-details text-center">
+              <h2 className="character-name">{currentStage.name}</h2>
+              <div className="character-level-name">
+                <span className="level-text">Lv.{character.level}</span>
+              </div>
             </div>
 
-            <div className="character-details">
-              <h2 className="character-name">{character.name}</h2>
+            {/* 연속 출석일과 먹인 횟수 Stat Card */}
+            <div className="character-stats-grid">
               <div className="stat-card stat-purple">
-                <p>
-                  보유 밥: <strong>{character.totalPoints}</strong>개
-                </p>
+                <div className="stat-icon-wrapper">
+                  <span className="stat-icon">⭐</span>
+                  <span className="stat-label">연속 출석</span>
+                </div>
+                <div className="stat-value">{character.daysStreak}일</div>
+              </div>
+              
+              <div className="stat-card stat-amber">
+                <div className="stat-icon-wrapper">
+                  <span className="stat-icon">🔥</span>
+                  <span className="stat-label">먹인 횟수</span>
+                </div>
+                <div className="stat-value">{character.totalFed}번</div>
               </div>
             </div>
           </div>
 
+          {/* 성장 진행도 */}
+          <div className="progress-section">
+            <div className="progress-header">
+              <span className="progress-label">다음 단계까지 성장 진행도</span>
+              <span className="progress-value">{currentFed}/{feedCountToLevelUp}</span>
+            </div>
+            <div className="progress-bar-wrapper">
+              <div 
+                className="progress-bar-fill" 
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <p className="progress-description">
+              다음 레벨업까지 <strong>{remainingFeeds}번</strong> 남았어요!
+            </p>
+          </div>
+
+          {/* 밥 주기 버튼 (원래대로 활성화) */}
           <div className="button-container">
             <button
               onClick={handleFeed}
-              disabled={feeding || character.totalPoints < 1}
+              // 원래의 활성화/비활성화 로직으로 복원
+              disabled={feeding || character.totalPoints < 1} 
               className={`feed-button ${
-                feeding ? "feed-button-disabled" : ""
-              } ${feedSuccess ? "feed-button-success" : ""}`}
+                feeding || character.totalPoints < 1 
+                  ? 'feed-button-disabled' 
+                  : ''
+              } ${feedSuccess ? 'feed-button-success' : ''}`}
             >
-              {feeding
-                ? "⏳ 밥 주는 중..."
-                : feedSuccess
-                ? "냠냠! 맛있어요 😋"
-                : character.totalPoints < 1
-                ? "밥 부족 (게시글 쓰기)"
-                : `🍚 밥 주기 (밥 1개 소모)`}
+              <span className="button-content">
+                {feeding ? (
+                  <>
+                    <span className="button-spinner">⏳</span>
+                    밥 주는 중...
+                  </>
+                ) : feedSuccess ? (
+                  "냠냠! 맛있어요 😋"
+                ) : character.totalPoints < 1 ? (
+                  "밥이 부족해요! 😢"
+                ) : (
+                  `🍚 밥 주기 1개 (보유: ${character.totalPoints}개)`
+                )}
+              </span>
             </button>
           </div>
         </div>
+        
+        {/* 2. 보유 밥 양 (캐릭터 카드와 컨텐츠 그리드 사이) */}
+        <div className="rice-mid-section">
+          <p className="rice-label">총 보유 밥</p>
+          <h2 className="rice-count-mid">
+            <span className="rice-icon">🍚</span>
+            {character.totalPoints}개
+          </h2>
+        </div>
 
-        {/* 성장 리스트 */}
+
+        {/* 3. 컨텐츠 그리드 (성장 단계, 밥 획득 방법 - 나란히 배치) */}
         <div className="content-grid">
-          <div className="content-card">
-            <h3 className="card-title">성장 과정</h3>
-
+          {/* 성장 단계 (비활성화 스타일 적용) */}
+          <div className="content-card non-interactive-card">
+            <div className="card-header">
+              <span className="header-icon">🌱</span>
+              <h3 className="card-title">성장 단계</h3>
+            </div>
             <div className="stages-list">
-              {CHARACTER_STAGES.map((s) => (
-                <div
-                  key={s.name}
-                  className={`stage-item ${
-                    character.level >= s.minLevel && character.level <= s.maxLevel
-                      ? "stage-item-active"
-                      : ""
-                  }`}
-                >
-                  <img src={s.img} alt="" style={{ width: 24, height: 24, marginRight: 8 }} />
-                  <span>{s.name}</span>
+              {CHARACTER_STAGES.map((stage) => {
+                const isActive = character.level >= stage.minLevel && character.level <= stage.maxLevel;
+                const isCompleted = character.level > stage.maxLevel;
+                
+                return (
+                  // non-interactive-item 클래스 추가
+                  <div
+                    key={stage.name}
+                    className={`stage-item non-interactive-item ${isActive ? 'stage-item-active' : ''} ${isCompleted ? 'stage-item-completed' : ''}`}
+                  >
+                    <div className="stage-info">
+                      <span className={`stage-emoji ${isActive ? 'stage-emoji-active' : ''}`}>
+                        <img 
+                          src={stage.img} 
+                          alt={stage.name}
+                          style={{
+                            width: "2rem",
+                            height: "2rem",
+                            objectFit: "contain"
+                          }}
+                        />
+                      </span>
+                      <div className="stage-text">
+                        <div className="stage-name">{stage.name}</div>
+                        <div className="stage-level">
+                          Lv.{stage.minLevel}~{stage.maxLevel}
+                        </div>
+                      </div>
+                    </div>
+                    {isCompleted && <div className="stage-check">✓</div>}
+                    {isActive && <div className="stage-check">●</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 밥 획득 방법 (비활성화 스타일 적용) */}
+          <div className="content-card non-interactive-card">
+            <div className="card-header">
+              <span className="header-icon">🎯</span>
+              <h3 className="card-title">밥 획득 방법</h3>
+            </div>
+            <div className="missions-list">
+              {/* non-interactive-item 클래스 추가 */}
+              <div className="mission-item mission-pink non-interactive-item">
+                <div className="mission-info">
+                  <span className="mission-icon">✍️</span>
+                  <span className="mission-title">게시글 작성</span>
                 </div>
-              ))}
+                <span className="mission-points">+1 🍚</span>
+              </div>
+              <div className="mission-item mission-blue non-interactive-item">
+                <div className="mission-info">
+                  <span className="mission-icon">💬</span>
+                  <span className="mission-title">댓글 작성</span>
+                </div>
+                <span className="mission-points">+1 🍚</span>
+              </div>
+              <div className="mission-item mission-red non-interactive-item">
+                <div className="mission-info">
+                  <span className="mission-icon">❤️</span>
+                  <span className="mission-title">좋아요 누르기</span>
+                </div>
+                <span className="mission-points">+1 🍚</span>
+              </div>
+              <div className="mission-item mission-amber non-interactive-item">
+                <div className="mission-info">
+                  <span className="mission-icon">📝</span>
+                  <span className="mission-title">응원 메시지</span>
+                </div>
+                <span className="mission-points">+1 🍚</span>
+              </div>
+            </div>
+            <div className="missions-hint">
+              <p>
+                매일 출석하면 밥 +1개, 7일 연속 출석 시 보너스 +5개! 🎁
+              </p>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

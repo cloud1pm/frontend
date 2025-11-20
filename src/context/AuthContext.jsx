@@ -15,7 +15,7 @@ import {
 const AuthContext = createContext(null);
 
 /* ----------------------------------------------------
- * 두 API 병합 유틸 (핵심)
+ * 두 API 병합 유틸 (status + user)
  * ---------------------------------------------------- */
 const fetchMergedUser = async () => {
   const statusRes = await axiosInstance.get("/user/status");
@@ -32,9 +32,6 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /* ----------------------------------------------------
-   * camelCase 변환
-   * ---------------------------------------------------- */
   const normalizeUser = (u) => {
     if (!u) return null;
 
@@ -68,10 +65,10 @@ export const AuthProvider = ({ children }) => {
   const setSession = ({ token: newToken, user: rawUser }) => {
     const normalized = normalizeUser(rawUser);
 
-    console.log("🔵 [AuthContext] setSession 호출:", {
-      token: newToken ? `${newToken.substring(0, 20)}...` : null,
-      user: normalized,
-    });
+    //console.log(" [AuthContext] setSession 호출:", {
+      //token: newToken ? `${newToken.substring(0, 20)}...` : null,
+      //user: normalized,
+    //});
 
     if (newToken) {
       axiosInstance.defaults.headers.common.Authorization = `Bearer ${newToken}`;
@@ -91,7 +88,7 @@ export const AuthProvider = ({ children }) => {
       const saved = getStoredSession();
 
       if (saved?.token) {
-        console.log("🔵 [AuthContext] LocalStorage 세션 발견");
+        //console.log(" [AuthContext] LocalStorage 세션 발견");
 
         axiosInstance.defaults.headers.common.Authorization = `Bearer ${saved.token}`;
 
@@ -100,7 +97,7 @@ export const AuthProvider = ({ children }) => {
 
         setSession({ token: saved.token, user: fullUser });
       } else {
-        console.log("🔵 [AuthContext] 저장된 세션 없음");
+        //console.log(" [AuthContext] 저장된 세션 없음");
       }
 
       setLoading(false);
@@ -111,7 +108,7 @@ export const AuthProvider = ({ children }) => {
    * 일반 로그인
    * ---------------------------------------------------- */
   const handleLogin = async (credentials) => {
-    console.log("🔵 [AuthContext] 일반 로그인 시작");
+    //console.log(" [AuthContext] 일반 로그인 시작");
 
     const raw = await loginApi(credentials);
     const token = raw.token;
@@ -176,7 +173,7 @@ export const AuthProvider = ({ children }) => {
    * 온보딩 완료 후 상태 갱신
    * ---------------------------------------------------- */
   const handleCompleteOnboarding = async (payload) => {
-    console.log("🔵 [AuthContext] 온보딩 완료 처리");
+    //console.log(" [AuthContext] 온보딩 완료 처리");
 
     await completeOnboardingApi(payload);
 

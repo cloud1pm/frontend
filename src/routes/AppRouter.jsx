@@ -157,7 +157,7 @@ const AppRoutes = () => (
       }
     />
 
-    {/* 👇 3. [추가] 오늘의 응원 페이지 라우트 */}
+    {/*  3. [추가] 오늘의 응원 페이지 라우트 */}
     <Route
       path="/encouragement"
       element={

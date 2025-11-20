@@ -25,27 +25,39 @@ axiosInstance.interceptors.request.use(
 );
 
 /* ----------------------------------------------------
- * 응답 인터셉터: 인증 실패 및 HTML 리다이렉트 감지 (중요!)
+ * 응답 인터셉터 (★ 핵심 안정 버전)
  * ---------------------------------------------------- */
 axiosInstance.interceptors.response.use(
   (response) => {
-    // 🚨 백엔드가 에러 대신 로그인 페이지(HTML)를 200으로 보냈는지 확인
-    const responseURL = response.request?.responseURL || "";
     const contentType = response.headers["content-type"] || "";
+    const responseURL = response.request?.responseURL || "";
 
-    // 조건: 응답이 HTML이거나 URL이 /login으로 변했을 경우
-    if (contentType.includes("text/html") || responseURL.includes("/login")) {
-      console.warn("⚠️ [Axios] 세션 만료 감지 (HTML 리다이렉트됨)");
+    // 1) JSON 응답이면 절대 세션 만료 처리하지 않음
+    if (contentType.includes("application/json")) {
+      return response;
+    }
 
-      // 1. 토큰 즉시 삭제 (좀비 세션 방지)
+    // 2) HTML이지만 "정상 API URL"이면 오탐 방지
+    //    (백엔드가 에러로 HTML을 보내도 이 경우는 정상 처리)
+    const apiPaths = ["/api/", "/user/", "/auth/", "/character"];
+    const isApiRequest = apiPaths.some((p) => responseURL.includes(p));
+
+    if (isApiRequest) {
+      return response; // HTML이어도 API 요청이면 절대 리다이렉트 금지
+    }
+
+    // 3) 진짜 로그인 페이지로 리다이렉트된 경우만 세션만료로 판단
+    if (
+      contentType.includes("text/html") &&
+      (responseURL.endsWith("/login") || responseURL.includes("/oauth2/authorization"))
+    ) {
+
       localStorage.removeItem("authToken");
       localStorage.removeItem("authUser");
 
-      // 2. 로그인 페이지로 강제 이동
       window.location.href = "/login";
-      
-      // 3. 가짜 성공을 에러로 바꿈
-      return Promise.reject(new Error("Session expired (Redirected to login)"));
+
+      return Promise.reject(new Error("Session expired"));
     }
 
     return response;
@@ -53,13 +65,14 @@ axiosInstance.interceptors.response.use(
   (error) => {
     const status = error.response?.status;
 
+    // 401/403 → 토큰 만료 or 인증 실패
     if (status === 401 || status === 403) {
-      console.warn("인증 실패:", status);
 
       localStorage.removeItem("authToken");
       localStorage.removeItem("authUser");
 
       const current = window.location.pathname;
+
       if (!["/login", "/signup", "/oauth2/redirect"].includes(current)) {
         window.location.href = "/login";
       }

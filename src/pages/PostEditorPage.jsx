@@ -21,7 +21,7 @@ const PostEditorPage = () => {
       setTitle(location.state.post.title);
       setContent(location.state.post.content);
     } else {
-      // ❗ 직접 URL 접근 시 백엔드에서 다시 GET 해오기
+      // 직접 URL 접근 시 백엔드에서 다시 GET 해오기
       communityAPI.getPostById(postId).then((post) => {
         setTitle(post.title);
         setContent(post.content);

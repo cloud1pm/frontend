@@ -173,7 +173,7 @@ export default function CommunityPostPage() {
                       <div className="community-comment__meta">
                         <span>{timeFormat(c.createdAt)}</span>
 
-                        {/* 🔥 내 댓글일 때만 삭제 버튼 표시 */}
+                        {/* 내 댓글일 때만 삭제 버튼 표시 */}
                         {currentUser?.nickname === c.authorName && (
                           <button
                             className="community-comment__delete"

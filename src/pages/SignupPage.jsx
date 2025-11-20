@@ -163,8 +163,7 @@ const handleUsernameCheck = async () => {
               <button
                 type="button"
                 onClick={handleUsernameCheck}
-                className="auth-submit"
-                style={{ padding: "0 16px", whiteSpace: "nowrap" }}
+                className="auth-check-btn"
               >
                 중복 확인
               </button>
