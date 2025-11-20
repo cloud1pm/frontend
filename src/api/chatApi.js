@@ -27,26 +27,8 @@ const nowIso = () => new Date().toISOString();
  *  1. 단일 메시지 분석
  * =========================== */
 export const sendQuickMessage = async (message) => {
-  if (USE_MOCK_API) {
-    const lower = message.toLowerCase();
-    let sentiment = "neutral";
-    let riskLevel = 1;
-
-    if (lower.includes("힘들") || lower.includes("우울") || lower.includes("죽고")) {
-      sentiment = "negative";
-      riskLevel = 3;
-    } else if (lower.includes("행복") || lower.includes("좋아") || lower.includes("기뻐")) {
-      sentiment = "positive";
-      riskLevel = 1;
-    }
-
-    return mockResponse({
-      message: "안녕하세요, 오늘도 수고 많으셨어요. 무슨 일이 있었나요?",
-      sentiment,
-      riskLevel,
-    });
-  }
-
+  
+    
   // ⭐ 백엔드 경로 확인 필요 (예: /chat/message)
   const { data } = await axiosInstance.post("/chat/message", { message });
   return data;
@@ -56,20 +38,6 @@ export const sendQuickMessage = async (message) => {
  *  2. 감정 트렌드
  * =========================== */
 export const getEmotionTrend = async (days = 7) => {
-  if (USE_MOCK_API) {
-    const sentiments = ["negative", "neutral", "positive"];
-    const trends = Array.from({ length: days }, (_, idx) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (days - 1 - idx));
-      return {
-        date: d.toISOString().slice(0, 10),
-        sentiment: sentiments[Math.floor(Math.random() * sentiments.length)],
-        averageScore: Number((Math.random() * 2 - 1).toFixed(2)),
-      };
-    });
-
-    return mockResponse({ trends });
-  }
 
   // ⭐ 백엔드 경로 확인 필요 (예: /chat/emotion-trend)
   const { data } = await axiosInstance.get("/chat/emotion-trend", {

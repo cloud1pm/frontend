@@ -1,5 +1,3 @@
-// src/context/AuthContext.jsx
-
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import axiosInstance from "../api/axiosInstance";
 
@@ -7,7 +5,7 @@ import {
   login as loginApi,
   signup as signupApi,
   logout as logoutApi,
-  handleGoogleCallback as googleLoginApi,
+  handleGoogleCallback as googleCallbackApi,
   completeOnboarding as completeOnboardingApi,
   getStoredSession,
   clearStoredSession,
@@ -16,48 +14,64 @@ import {
 
 const AuthContext = createContext(null);
 
+/* ----------------------------------------------------
+ * 두 API 병합 유틸 (핵심)
+ * ---------------------------------------------------- */
+const fetchMergedUser = async () => {
+  const statusRes = await axiosInstance.get("/user/status");
+  const userRes = await axiosInstance.get("/user");
+
+  return {
+    ...userRes.data,    // user 기본 정보
+    ...statusRes.data,  // character + 초기설정 정보
+  };
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   /* ----------------------------------------------------
-   *  user 정규화: 백엔드 스키마와 100% 맞추기
+   * camelCase 변환
    * ---------------------------------------------------- */
-
   const normalizeUser = (u) => {
     if (!u) return null;
 
-    // 백엔드 snake_case → camelCase 변환
-    return {
-      id: u.id ?? null,
-      email: u.email ?? null,
-      username: u.username ?? null,
-      nickname: u.nickname ?? null, 
-      profileImageUrl: u.profileImageUrl ?? u.profile_image_url ?? null,
+    const hasCompleted = 
+      u.hasCompletedInitialSetup ??
+      u.has_completed_initial_setup ??
+      false;
 
-      provider: u.provider ?? null,
-      providerId: u.providerId ?? u.provider_id ?? null,
+    return {
+      id: u.id,
+      email: u.email,
+      username: u.username,
+      nickname: u.nickname,
+      profileImageUrl: u.profileImageUrl ?? u.profile_image_url,
+      provider: u.provider,
+      providerId: u.providerId ?? u.provider_id,
 
       rice: u.rice ?? 0,
       characterLevel: u.characterLevel ?? u.character_level ?? 1,
       feedCount: u.feedCount ?? u.feed_count ?? 0,
       consecutiveDays: u.consecutiveDays ?? u.consecutive_days ?? 0,
+      lastLoginDate: u.lastLoginDate ?? u.last_login_date,
 
-      lastLoginDate: u.lastLoginDate ?? u.last_login_date ?? null,
-      isOnboarded:
-        u.isOnboarded ??
-        u.hasCompletedInitialSetup ??
-        u.has_completed_initial_setup ??
-        false,
+      hasCompletedInitialSetup: hasCompleted,
     };
   };
 
   /* ----------------------------------------------------
-   * 세션 저장 + axios 토큰 설정
+   * 세션 저장
    * ---------------------------------------------------- */
   const setSession = ({ token: newToken, user: rawUser }) => {
     const normalized = normalizeUser(rawUser);
+
+    console.log("🔵 [AuthContext] setSession 호출:", {
+      token: newToken ? `${newToken.substring(0, 20)}...` : null,
+      user: normalized,
+    });
 
     if (newToken) {
       axiosInstance.defaults.headers.common.Authorization = `Bearer ${newToken}`;
@@ -70,42 +84,45 @@ export const AuthProvider = ({ children }) => {
   };
 
   /* ----------------------------------------------------
-   * LocalStorage에서 세션 복원
+   * LocalStorage 복원
    * ---------------------------------------------------- */
   useEffect(() => {
-    const saved = getStoredSession();
+    (async () => {
+      const saved = getStoredSession();
 
-    if (saved?.token && saved?.user) {
-      axiosInstance.defaults.headers.common.Authorization = `Bearer ${saved.token}`;
-      setSession(saved);
-    }
+      if (saved?.token) {
+        console.log("🔵 [AuthContext] LocalStorage 세션 발견");
 
-    setLoading(false);
+        axiosInstance.defaults.headers.common.Authorization = `Bearer ${saved.token}`;
+
+        // 최신 정보로 업데이트 (두 API 병합)
+        const fullUser = await fetchMergedUser();
+
+        setSession({ token: saved.token, user: fullUser });
+      } else {
+        console.log("🔵 [AuthContext] 저장된 세션 없음");
+      }
+
+      setLoading(false);
+    })();
   }, []);
 
   /* ----------------------------------------------------
-   * 로그인
+   * 일반 로그인
    * ---------------------------------------------------- */
   const handleLogin = async (credentials) => {
-    // 1) login API 호출
+    console.log("🔵 [AuthContext] 일반 로그인 시작");
+
     const raw = await loginApi(credentials);
-
     const token = raw.token;
-    if (!token) throw new Error("로그인 토큰 없음");
 
-    // 임시 user (userId만 있는 상태)
-    const tempUser = raw.user;
+    // token 먼저 저장 (인증 헤더 적용)
+    persistSession({ token, user: raw.user });
+    setSession({ token, user: raw.user });
 
-    // 2) 토큰 먼저 저장
-    persistSession({ token, user: tempUser });
-    setSession({ token, user: tempUser });
+    // 병합된 최신 유저 정보 가져오기
+    const fullUser = await fetchMergedUser();
 
-    // 3) 토큰 기반으로 실제 유저 데이터 조회
-    const profileResponse = await axiosInstance.get("/user");
-
-    const fullUser = profileResponse.data;
-
-    // 4) 진짜 user 정보로 세션 갱신
     const sessionData = { token, user: fullUser };
     persistSession(sessionData);
     setSession(sessionData);
@@ -114,25 +131,31 @@ export const AuthProvider = ({ children }) => {
   };
 
   /* ----------------------------------------------------
-   * 구글 로그인
+   * OAuth2 (구글 로그인)
    * ---------------------------------------------------- */
-  const handleGoogleLogin = async (credential) => {
-    const raw = await googleLoginApi(credential);
+  const handleGoogleLogin = async (token) => {
+    console.log("🔵 [AuthContext] 구글 로그인 처리 시작");
 
-    const response = {
-      token: raw.token || raw.accessToken || raw.data?.token,
-      user: raw.user || raw.data?.user,
-    };
+    const raw = await googleCallbackApi(token);
 
-    persistSession(response);
-    setSession(response);
-    return response;
+    // callback 응답은 최소한의 정보만 담겨 있음 → 병합 필요
+    persistSession(raw);
+    setSession(raw);
+
+    const fullUser = await fetchMergedUser();
+
+    const sessionData = { token: raw.token, user: fullUser };
+    persistSession(sessionData);
+    setSession(sessionData);
+
+    return sessionData;
   };
 
   /* ----------------------------------------------------
-   * 회원가입 (세션 변화 없음)
+   * 회원가입
    * ---------------------------------------------------- */
   const handleSignup = async (payload) => {
+    console.log("🔵 [AuthContext] 회원가입 시작");
     return await signupApi(payload);
   };
 
@@ -140,36 +163,44 @@ export const AuthProvider = ({ children }) => {
    * 로그아웃
    * ---------------------------------------------------- */
   const handleLogout = async () => {
+    console.log("🔵 [AuthContext] 로그아웃");
     try {
       await logoutApi();
     } catch {}
-    setSession({ token: null, user: null });
+
     clearStoredSession();
+    setSession({ token: null, user: null });
   };
 
   /* ----------------------------------------------------
-   * 온보딩 완료
+   * 온보딩 완료 후 상태 갱신
    * ---------------------------------------------------- */
   const handleCompleteOnboarding = async (payload) => {
+    console.log("🔵 [AuthContext] 온보딩 완료 처리");
+
     await completeOnboardingApi(payload);
 
-    const updatedUser = {
-      ...user,
-      isOnboarded: true,
-    };
+    // 최신 사용자 정보 병합
+    const fullUser = await fetchMergedUser();
 
-    const response = { token, user: updatedUser };
-    persistSession(response);
-    setSession(response);
-    return response;
+    const sessionData = { token, user: fullUser };
+    persistSession(sessionData);
+    setSession(sessionData);
+
+    return sessionData;
   };
 
+  /* ----------------------------------------------------
+   * Context Value
+   * ---------------------------------------------------- */
   const value = useMemo(
     () => ({
       user,
       token,
       loading,
+
       isAuthenticated: Boolean(user && token),
+
       login: handleLogin,
       googleLogin: handleGoogleLogin,
       signup: handleSignup,

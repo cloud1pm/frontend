@@ -1,6 +1,5 @@
 // communityApi.js
 import axiosInstance from "./axiosInstance";
-import { USE_MOCK_API, mockResponse } from "./config";
 
 const POSTS_PER_PAGE = 6;
 

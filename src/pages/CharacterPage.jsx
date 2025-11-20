@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./CharacterPage.css";
-import { userAPI } from "../api/userApi"; // userApi 파일 경로에 맞게 수정
-// axios 에러 구조를 위한 타입 힌트 (실제 코드에서는 필요 없음)
-// import type { AxiosError } from 'axios'; 
+import { userAPI } from "../api/userApi";
 
-// 이미지 Import (경로 확인 필요)
+// 이미지 Import
 import waterImg from "../assets/character/water.png";
 import snowImg from "../assets/character/snow.png";
 import babyImg from "../assets/character/baby.png";
@@ -24,13 +22,13 @@ const CharacterPage = () => {
   const [feeding, setFeeding] = useState(false);
   const [feedSuccess, setFeedSuccess] = useState(false);
 
-  // 서버에서 캐릭터 정보 가져오기
+  // 상태 조회
   const fetchCharacterData = async () => {
     setLoading(true);
     try {
       const data = await userAPI.getCharacterInfo();
       setCharacter({
-        name: "눈송이", // 이름은 고정이라고 가정
+        name: "눈송이",
         level: data.characterLevel,
         totalPoints: data.rice,
         totalFed: data.feedCount,
@@ -38,7 +36,6 @@ const CharacterPage = () => {
       });
     } catch (error) {
       console.error("❌ 캐릭터 로드 실패:", error);
-      // 에러 시 character = null 상태 유지
     } finally {
       setLoading(false);
     }
@@ -48,11 +45,15 @@ const CharacterPage = () => {
     fetchCharacterData();
   }, []);
 
-  // 현재 캐릭터 단계 계산
-  const currentStage = CHARACTER_STAGES.find(
-    (s) => character && character.level >= s.minLevel && character.level <= s.maxLevel
-  ) || CHARACTER_STAGES[0];
+  // 현재 단계 계산
+  const currentStage =
+    (character &&
+      CHARACTER_STAGES.find(
+        (s) => character.level >= s.minLevel && character.level <= s.maxLevel
+      )) ||
+    CHARACTER_STAGES[0];
 
+  // 🍚 밥 주기 처리
   const handleFeed = async () => {
     if (!character || feeding) return;
 
@@ -65,53 +66,67 @@ const CharacterPage = () => {
     setFeedSuccess(false);
 
     try {
-      // 💡 [수정] 서버에 밥 주기 요청 후 업데이트된 데이터를 바로 받음
       const updatedData = await userAPI.feedCharacter();
-      console.log("✅ Feed response:", updatedData);
-      
+      console.log("🔥 Feed response:", updatedData);
+
+      const { newRiceCount, newLevel, message } = updatedData;
+
+      // ❗ 밥 부족
+      if (message && message.includes("밥이 부족")) {
+        alert(message);
+        return;
+      }
+
+      // 정상 feeding 시 UI에서 직접 rice - 1
+      const nextRice =
+        newRiceCount !== undefined ? newRiceCount : character.totalPoints - 1;
+
       setFeedSuccess(true);
-      
-      // 💡 [수정] 불필요한 재요청 없이 받은 데이터로 상태 즉시 업데이트 (효율성 증가)
-      setCharacter(prev => ({
+
+      setCharacter((prev) => ({
         ...prev,
-        level: updatedData.characterLevel,
-        totalPoints: updatedData.rice,
-        totalFed: updatedData.feedCount,
-        // daysStreak은 변경되지 않는다고 가정하고 유지
+        level: newLevel !== undefined ? newLevel : prev.level,
+        totalPoints: nextRice, // rice 감소 처리
+        totalFed: prev.totalFed + 1, // feedCount 증가
       }));
 
-      // 1초 후 버튼 상태 초기화
       setTimeout(() => setFeedSuccess(false), 1000);
     } catch (error) {
       console.error("🔥 밥 주기 실패:", error);
-      
-      // 에러 상세 정보 출력 및 사용자에게 알림
-      const axiosError = error; // AxiosError로 가정
+
+      const axiosError = error;
+
       if (axiosError.response) {
         const status = axiosError.response.status;
         const message = axiosError.response.data?.message;
 
-        // 400 Bad Request, 500 Internal Server Error 등에 구체적으로 대응
-        if (status === 400 && message.includes("밥이 부족")) {
-            alert("🍚 밥이 부족합니다. 게시글을 써서 밥을 모아보세요!");
+        if (status === 400 && message?.includes("밥이 부족")) {
+          alert(message);
         } else if (status === 500) {
-            alert("🔥 서버 오류: 잠시 후 다시 시도해 주세요.");
+          alert("🔥 서버 오류: 잠시 후 다시 시도해주세요.");
         } else {
-            alert(`오류가 발생했습니다: ${message || status}`);
+          alert(`오류: ${message || status}`);
         }
       } else if (axiosError.request) {
-        alert("서버로부터 응답이 없습니다. 네트워크 연결을 확인하세요.");
+        alert("서버 응답이 없습니다. 네트워크를 확인해주세요.");
       } else {
-        alert("요청 설정 중 오류가 발생했습니다.");
+        alert("요청 중 오류가 발생했습니다.");
       }
     } finally {
       setFeeding(false);
     }
   };
 
-  // 로딩 및 에러 처리
-  if (loading) return <div className="loading-container"><div className="loading-spinner">❄️</div></div>;
-  if (!character) return <div className="error-container">캐릭터 정보를 불러올 수 없습니다.</div>;
+  // 로딩 처리
+  if (loading)
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner">❄️</div>
+      </div>
+    );
+
+  if (!character)
+    return <div className="error-container">캐릭터 정보를 불러올 수 없습니다.</div>;
 
   return (
     <div className="character-page">
@@ -122,18 +137,25 @@ const CharacterPage = () => {
 
         <div className="character-main-card">
           <div className={`card-background ${currentStage.gradient}`}></div>
-          
+
           <div className="character-info-section">
             <div className="character-avatar-wrapper">
               <div className="character-avatar">
-                <img src={currentStage.img} alt={currentStage.name} style={{width:"100%", height:"100%", objectFit:"contain"}}/>
+                <img
+                  src={currentStage.img}
+                  alt={currentStage.name}
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                />
               </div>
               <div className="character-level-badge">Lv.{character.level}</div>
             </div>
+
             <div className="character-details">
               <h2 className="character-name">{character.name}</h2>
               <div className="stat-card stat-purple">
-                <p>보유 밥: <strong>{character.totalPoints}</strong>개</p>
+                <p>
+                  보유 밥: <strong>{character.totalPoints}</strong>개
+                </p>
               </div>
             </div>
           </div>
@@ -141,31 +163,38 @@ const CharacterPage = () => {
           <div className="button-container">
             <button
               onClick={handleFeed}
-              disabled={feeding || character.totalPoints < 1} // 💡 밥 부족 시 버튼 비활성화 로직 추가
-              className={`feed-button ${feeding ? 'feed-button-disabled' : ''} ${feedSuccess ? 'feed-button-success' : ''}`}
+              disabled={feeding || character.totalPoints < 1}
+              className={`feed-button ${
+                feeding ? "feed-button-disabled" : ""
+              } ${feedSuccess ? "feed-button-success" : ""}`}
             >
               {feeding
                 ? "⏳ 밥 주는 중..."
                 : feedSuccess
                 ? "냠냠! 맛있어요 😋"
-                : character.totalPoints < 1 
+                : character.totalPoints < 1
                 ? "밥 부족 (게시글 쓰기)"
                 : `🍚 밥 주기 (밥 1개 소모)`}
             </button>
           </div>
         </div>
 
-        {/* 하단 성장 과정 리스트 */}
+        {/* 성장 리스트 */}
         <div className="content-grid">
           <div className="content-card">
             <h3 className="card-title">성장 과정</h3>
+
             <div className="stages-list">
-              {CHARACTER_STAGES.map(s => (
+              {CHARACTER_STAGES.map((s) => (
                 <div
                   key={s.name}
-                  className={`stage-item ${character.level >= s.minLevel && character.level <= s.maxLevel ? 'stage-item-active' : ''}`}
+                  className={`stage-item ${
+                    character.level >= s.minLevel && character.level <= s.maxLevel
+                      ? "stage-item-active"
+                      : ""
+                  }`}
                 >
-                  <img src={s.img} alt="" style={{width:24, height:24, marginRight:8}}/>
+                  <img src={s.img} alt="" style={{ width: 24, height: 24, marginRight: 8 }} />
                   <span>{s.name}</span>
                 </div>
               ))}

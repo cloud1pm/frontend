@@ -16,12 +16,19 @@ const PostEditorPage = () => {
 
   // 수정 모드일 때 기존 데이터 로드
   useEffect(() => {
-    if (isEditMode && location.state?.post) {
-      const { post } = location.state;
-      setTitle(post.title || "");
-      setContent(post.content || "");
+  if (isEditMode) {
+    if (location.state?.post) {
+      setTitle(location.state.post.title);
+      setContent(location.state.post.content);
+    } else {
+      // ❗ 직접 URL 접근 시 백엔드에서 다시 GET 해오기
+      communityAPI.getPostById(postId).then((post) => {
+        setTitle(post.title);
+        setContent(post.content);
+      });
     }
-  }, [isEditMode, location.state]);
+  }
+}, [isEditMode, location.state, postId]);
 
   const isSubmitDisabled = useMemo(
     () => submitting || title.trim().length === 0 || content.trim().length === 0,
@@ -42,7 +49,6 @@ const PostEditorPage = () => {
       const payload = {
         title: title.trim(),
         content: content.trim(),
-        image: uploadFile,
       };
 
       if (isEditMode) {

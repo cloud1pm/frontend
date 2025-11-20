@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 import { signup } from "../api/authApi";
 import { useAuth } from "../context/AuthContext";
+import { saveInitialSetup } from "../api/userApi";
 
 const riskLevels = [
   { id: 1, description: "살짝 불편함" },
@@ -69,9 +70,15 @@ const levelEmojis = {
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { user, isAuthenticated, completeOnboarding } = useAuth();
 
   const signupInfo = location.state?.signupInfo;
+
+  // 온보딩 모드 판별
+  // - SIGNUP: 일반 회원가입 플로우 (signupInfo 있음)
+  // - OAUTH: OAuth 로그인 후 온보딩 (로그인된 사용자)
+  const isOAuthMode = isAuthenticated && user && !signupInfo;
+  const isSignupMode = !isAuthenticated && signupInfo;
 
   const [step, setStep] = useState(1);
   const [solutions, setSolutions] = useState({ 1: [], 2: [], 3: [], 4: [], 5: [] });
@@ -79,15 +86,23 @@ const OnboardingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+  // 잘못된 접근 체크
   useEffect(() => {
-    console.log("🔵 [OnboardingPage] signupInfo:", signupInfo);
-    
-    if (!signupInfo) {
-      console.warn("⚠️ [OnboardingPage] signupInfo 없음 → /signup 리다이렉트");
-      alert("회원가입 정보가 없습니다. 다시 시도해주세요.");
-      navigate("/signup");
+    console.log("🔵 [OnboardingPage] 모드 체크:", {
+      isOAuthMode,
+      isSignupMode,
+      isAuthenticated,
+      hasUser: !!user,
+      hasSignupInfo: !!signupInfo,
+    });
+
+    // 두 모드 모두 아닌 경우 (잘못된 접근)
+    if (!isOAuthMode && !isSignupMode) {
+      console.warn("⚠️ [OnboardingPage] 잘못된 접근 → 메인 페이지로 리다이렉트");
+      alert("잘못된 접근입니다.");
+      navigate("/", { replace: true });
     }
-  }, [signupInfo, navigate]);
+  }, [isOAuthMode, isSignupMode, isAuthenticated, user, signupInfo, navigate]);
 
   const handleSelect = (activity) => {
     setSolutions((prev) => {
@@ -127,7 +142,7 @@ const OnboardingPage = () => {
     setError(null);
 
     try {
-      // 1) riskSolutions 포맷팅
+      // riskSolutions 포맷팅
       const formattedSolutions = Object.entries(solutions).flatMap(([level, items]) =>
         items.map((solution) => ({
           riskLevel: Number(level),
@@ -137,28 +152,42 @@ const OnboardingPage = () => {
 
       console.log("🔵 [OnboardingPage] formattedSolutions:", formattedSolutions);
 
-      // 2) 회원가입 요청 페이로드
-      const signupPayload = {
-        email: signupInfo.email,
-        username: signupInfo.username,
-        nickname: signupInfo.nickname || signupInfo.username,
-        password: signupInfo.password,
-        confirmPassword: signupInfo.confirmPassword,
-        profileImageUrl: "/default/user_profile.png",
-        riskSolutions: formattedSolutions,
-      };
+      if (isSignupMode) {
+        // ========== 일반 회원가입 플로우 ==========
+        console.log("🔵 [OnboardingPage] 일반 회원가입 모드");
 
-      console.log("🔵 [OnboardingPage] 회원가입 요청:", signupPayload);
+        const signupPayload = {
+          email: signupInfo.email,
+          username: signupInfo.username,
+          nickname: signupInfo.nickname || signupInfo.username,
+          password: signupInfo.password,
+          confirmPassword: signupInfo.confirmPassword,
+          profileImageUrl: "/default/user_profile.png",
+          riskSolutions: formattedSolutions,
+        };
 
-      // 3) 회원가입 API 호출
-      const signupResult = await signup(signupPayload);
-      // 성공 메시지 
-      alert("회원가입이 완료되었습니다! 환영합니다 😊");
-      navigate("/login", { replace: true });
+        console.log("🔵 [OnboardingPage] 회원가입 요청:", signupPayload);
+
+        await signup(signupPayload);
+        
+        alert("회원가입이 완료되었습니다! 환영합니다 😊");
+        navigate("/login", { replace: true });
+
+      } else if (isOAuthMode) {
+        // ========== OAuth 온보딩 플로우 ==========
+        console.log("🔵 [OnboardingPage] OAuth 온보딩 모드");
+
+        // completeOnboarding 호출 (AuthContext에서 세션 업데이트까지 처리)
+        await completeOnboarding({ riskSolutions: formattedSolutions });
+
+        alert("온보딩이 완료되었습니다! 환영합니다 😊");
+        navigate("/chat", { replace: true });
+      }
       
     } catch (err) {
+      console.error("❌ [OnboardingPage] 제출 실패:", err);
       
-      let errorMessage = "회원가입 중 오류가 발생했습니다.";
+      let errorMessage = "처리 중 오류가 발생했습니다.";
       
       if (err.response) {
         console.error("❌ 백엔드 에러 응답:", err.response.data);
@@ -185,8 +214,18 @@ const OnboardingPage = () => {
 
   const candidates = useMemo(() => [...solutionCandidates].sort(), []);
 
-  if (!signupInfo) {
-    return <div>로딩 중...</div>;
+  // 로딩 중
+  if (!isOAuthMode && !isSignupMode) {
+    return (
+      <div style={{ 
+        minHeight: "100vh", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center" 
+      }}>
+        <div>로딩 중...</div>
+      </div>
+    );
   }
 
   return (
@@ -195,6 +234,16 @@ const OnboardingPage = () => {
       <div style={styles.header}>
         <div style={styles.stepInfo}>
           <span style={styles.stepText}>Step {step} of 5</span>
+          {isOAuthMode && (
+            <span style={{ 
+              fontSize: "12px", 
+              color: "#7c3aed", 
+              marginLeft: "8px",
+              fontWeight: "600" 
+            }}>
+              (OAuth 사용자)
+            </span>
+          )}
         </div>
         <div style={styles.progressBar}>
           {[1, 2, 3, 4, 5].map((i) => (
@@ -303,7 +352,7 @@ const OnboardingPage = () => {
                 ...(isSubmitting ? styles.navButtonDisabled : {})
               }}
             >
-              {isSubmitting ? "처리 중..." : (step < 5 ? "다음 단계 →" : "회원가입 완료")}
+              {isSubmitting ? "처리 중..." : (step < 5 ? "다음 단계 →" : "완료")}
             </button>
           </div>
         </div>
@@ -327,6 +376,7 @@ const styles = {
   stepInfo: {
     display: "flex",
     justifyContent: "center",
+    alignItems: "center",
     marginBottom: "10px",
   },
   stepText: {
@@ -408,6 +458,7 @@ const styles = {
     backgroundColor: "white",
     cursor: "pointer",
     fontSize: "14px",
+    transition: "all 0.2s",
   },
   activityButtonSelected: {
     backgroundColor: "#ede9fe",
@@ -436,6 +487,7 @@ const styles = {
     cursor: "pointer",
     backgroundColor: "#7c3aed",
     color: "white",
+    transition: "opacity 0.2s",
   },
   navButtonDisabled: {
     opacity: 0.5,

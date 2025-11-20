@@ -24,6 +24,7 @@ import CommunityPostPage from "../pages/CommunityPostPage";
 import CharacterPage from "../pages/CharacterPage";
 import EncouragementPage from "../pages/EncouragementPage"; // 👈 1. import 추가
 import { useAuth } from "../context/AuthContext";
+import OAuth2RedirectPage from "../pages/OAuth2RedirectPage";
 
 import "../pages/AuthPage.css";
 
@@ -38,7 +39,7 @@ const RequireAuth = ({ children }) => {
 // 온보딩 끝나야 접근 가능
 const RequireOnboarded = ({ children }) => {
   const { user } = useAuth();
-  if (!user?.isOnboarded) return <Navigate to="/onboarding" replace />;
+  if (!user?.hasCompletedInitialSetup) return <Navigate to="/onboarding" replace />;
   return children;
 };
 
@@ -69,17 +70,12 @@ const LayoutWrapper = ({ children }) => {
 
 const AppRoutes = () => (
   <Routes>
-   <Route path="/" element={<LandingPage />} />
-    {/* 로그인 페이지 */}
+    <Route path="/" element={<LandingPage />} />
     <Route path="/login" element={<LoginPage />} />
-
-    {/* 회원가입 페이지 (구글 로그인만 쓸 거면 나중에 지워도 됨) */}
     <Route path="/signup" element={<SignupPage />} />
-
-    {/* 온보딩 */}
     <Route path="/onboarding" element={<OnboardingPage />} />
 
-
+    <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
     {/* 채팅 */}
     <Route
       path="/chat"
@@ -128,6 +124,17 @@ const AppRoutes = () => (
     />
 
     <Route
+  path="/community/edit/:postId"
+  element={
+    <RequireAuth>
+      <RequireOnboarded>
+        <PostEditorPage />
+      </RequireOnboarded>
+    </RequireAuth>
+  }
+/>
+
+    <Route
       path="/community/post/:postId"
       element={
         <RequireAuth>
@@ -163,7 +170,7 @@ const AppRoutes = () => (
     />
 
     {/* 기본 라우팅 */}
-    <Route path="/" element={<Navigate to="/login" replace />} />
+    <Route path="/" element={<LandingPage/>} />
     <Route path="*" element={<Navigate to="/login" replace />} />
   </Routes>
 );
