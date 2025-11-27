@@ -29,22 +29,23 @@ const EmotionReportPage = () => {
     try {
       const days = period === "week" ? 7 : 30;
       const response = await getEmotionTrend(days);
+
       const trendList = response.trends ?? [];
 
-      if (trendList.length > 0) {
-        const formattedData = trendList.map((item) => ({
-          date: formatDate(item.date),
-          score: normalizeScore(item.averageSentimentScore ?? item.score ?? 0),
-        }));
-        setEmotionData(formattedData);
-      } else {
-        // 데이터가 없을 경우 예시 데이터 사용
-        setEmotionData(generateMockData(period));
-      }
+      const formattedData = trendList.map((item) => ({
+        date: formatDate(item.date),
+        score: normalizeScore(
+          item.averageSentimentScore ??
+            item.averageScore ??
+            item.score ??
+            0
+        ),
+      }));
+
+      setEmotionData(formattedData);
     } catch (err) {
       console.error("감정 트렌드 조회 실패:", err);
-      setError("데이터를 불러오지 못해 예시를 보여드려요.");
-      // 에러 시에도 예시 데이터 표시 (UI 유지)
+      setError("감정 데이터를 불러오는데 실패했습니다.");
       setEmotionData(generateMockData(period));
     } finally {
       setLoading(false);
@@ -58,134 +59,129 @@ const EmotionReportPage = () => {
     return `${month}/${day}`;
   };
 
-  // 감정 점수 변환 (-1.0 ~ 1.0 -> -10 ~ 10)
-  const normalizeScore = (value) => {
-    if (value === null || value === undefined) return 0;
-    return Math.round(Number(value) * 10);
-  };
-
-  // 예시 데이터 생성
+  // ✔ 랜덤 예시 데이터 (-10 ~ +10)
   const generateMockData = (periodType) => {
     const days = periodType === "week" ? 7 : 30;
     const today = new Date();
     const data = [];
+
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      // -5 ~ 8 사이의 랜덤 점수
-      const randomScore = Math.floor(Math.random() * 14) - 5;
       data.push({
         date: formatDate(date),
-        score: randomScore,
+        score: Number((Math.random() * 20 - 10).toFixed(1)), // -10~10
       });
     }
     return data;
   };
 
+  // ✔ -1.0 ~ 1.0 → -10 ~ +10 스케일, 소수점 1자리 유지
+  const normalizeScore = (value) => {
+    if (value === null || value === undefined) return 0;
+    const scaled = Number(value) * 10;
+    return Math.round(scaled * 10) / 10; // 소수점 1자리
+  };
+
   return (
-    <div className="report-wrapper">
-      <div className="report-container">
-        
-        {/* 헤더 */}
-        <header className="report-header">
-          <h1 className="report-title">감정 리포트</h1>
-          <p className="report-subtitle">
-            지난 {period === "week" ? "일주일" : "한 달"} 동안의<br />
-            나의 감정 날씨를 확인해보세요 🌤️
-          </p>
-        </header>
+    <div className="emotion-report-container">
+      {/* 헤더 */}
+      <div className="report-header">
+        <h1 className="report-title">감정 변화 추이</h1>
+        <p className="report-subtitle">
+          지난 {period === "week" ? "일주일" : "한 달"} 간, 감정의 흐름이 이렇게 움직였어요
+        </p>
+      </div>
 
-        {/* 기간 선택 탭 */}
-        <div className="report-tabs-wrapper">
-          <div className="report-tabs">
-            <button
-              className={`report-tab-btn ${period === "week" ? "active" : ""}`}
-              onClick={() => setPeriod("week")}
-            >
-              최근 7일
-            </button>
-            <button
-              className={`report-tab-btn ${period === "month" ? "active" : ""}`}
-              onClick={() => setPeriod("month")}
-            >
-              한 달
+      {/* 기간 선택 */}
+      <div className="period-tabs">
+        <button
+          className={`period-tab ${period === "week" ? "active" : ""}`}
+          onClick={() => setPeriod("week")}
+        >
+          최근 7일
+        </button>
+        <button
+          className={`period-tab ${period === "month" ? "active" : ""}`}
+          onClick={() => setPeriod("month")}
+        >
+          한 달
+        </button>
+      </div>
+
+      {/* 점수 안내 */}
+      <div className="emotion-info-simple">
+        <p>📘 <strong>감정 점수 안내</strong></p>
+        <p>감정 점수는 -10에서 +10 사이로 표현돼요.</p>
+        <p>0을 기준으로 위는 긍정☺️, 아래는 부정😞 감정을 의미해요. </p>
+        <p className="emotion-tip">
+          힘든 날이 있더라도 괜찮아요. 오늘을 되돌아보고 내가 설정한 작은 활동 하나만 실천해볼까요?
+        </p>
+      </div>
+
+      {/* 차트 */}
+      <div className="chart-container">
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>감정 데이터를 불러오는 중...</p>
+          </div>
+        ) : error ? (
+          <div className="error-state">
+            <p className="error-message">{error}</p>
+            <button className="retry-button" onClick={fetchEmotionTrend}>
+              다시 시도
             </button>
           </div>
-        </div>
-
-        {/* 차트 카드 */}
-        <div className="report-card">
-          <div className="chart-header-row">
-            <h3>감정 흐름</h3>
-            {error && <span className="mock-badge">예시 데이터</span>}
-          </div>
-
-          {loading ? (
-            <div className="report-msg">
-              <div className="spinner"></div>
-              <p>데이터를 분석하고 있어요...</p>
-            </div>
-          ) : (
-            <div style={{ width: "100%", height: "300px" }}> {/* 높이 고정 컨테이너 */}
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={emotionData}
-                  margin={{ top: 20, right: 20, left: 0, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    stroke="#94a3b8"
-                    tick={{ fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                    dy={10}
-                  />
-                  <YAxis
-                    hide
-                    domain={[-10, 10]}
-                  />
-                  <ReferenceLine y={0} stroke="#cbd5e1" strokeDasharray="3 3" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "none",
-                      borderRadius: "12px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      padding: "10px 14px",
-                      fontSize: "13px",
-                      color: "#1e3a8a"
-                    }}
-                    formatter={(value) => [`${value}점`, "감정 점수"]}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="score"
-                    stroke="#2563eb"
-                    strokeWidth={3}
-                    dot={{ r: 4, fill: "white", stroke: "#2563eb", strokeWidth: 2 }}
-                    activeDot={{ r: 6, fill: "#2563eb", stroke: "white", strokeWidth: 2 }}
-                    animationDuration={1500}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </div>
-
-        {/* 하단 안내 카드 */}
-        <div className="report-info-card">
-          <div className="info-icon">💡</div>
-          <div className="info-content">
-            <h3>감정 점수는 어떻게 보나요?</h3>
-            <p>
-              <span className="highlight-pos">0점 위</span>는 긍정적인 마음,<br />
-              <span className="highlight-neg">0점 아래</span>는 조금 지친 마음을 의미해요.<br />
-              그래프가 내려가도 괜찮아요. 잠시 쉬어가라는 신호니까요. ☕
+        ) : emotionData.length === 0 ? (
+          <div className="empty-state">
+            <p className="empty-message">아직 감정 데이터가 없어요</p>
+            <p className="empty-description">
+              채팅을 통해 감정을 기록하면 여기에 표시됩니다
             </p>
           </div>
-        </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart
+              data={emotionData}
+              margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis
+                dataKey="date"
+                stroke="#9ca3af"
+                style={{ fontSize: "12px" }}
+              />
+              <YAxis
+                stroke="#9ca3af"
+                style={{ fontSize: "12px" }}
+                domain={[-10, 10]}
+              />
 
+              {/* 0 기준선 */}
+              <ReferenceLine y={0} stroke="#cbd5e1" strokeDasharray="3 3" />
+
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "white",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                }}
+                formatter={(value) => [`${value}`, "감정 점수"]}
+              />
+
+              <Line
+                type="monotone"
+                dataKey="score"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
