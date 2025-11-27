@@ -1,33 +1,83 @@
-.chat-window {
-  width: 100%;
-  max-width: 720px;
+/* ChatWindow.css - Sumone Style Bubbles */
+
+.cw-container {
   display: flex;
   flex-direction: column;
-  align-items: center; /* 수평 중앙 정렬 유지 */
-  gap: 12px; /* 메시지들 사이 간격 확보 */
-  box-sizing: border-box;
-  /* 기존 패딩(60px 0 100px) 제거 — 스크롤 컨테이너가 여백 담당 */
+  gap: 20px;
+  padding-bottom: 20px;
 }
 
-.chat-bubble {
-  max-width: 70%;
-  padding: 14px 18px; /* 좀 더 여유 있게 */
-  border-radius: 16px;
-  line-height: 1.4;
+.cw-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  width: 100%;
+}
+
+/* 유저: 오른쪽 정렬 */
+.cw-row.user {
+  justify-content: flex-end;
+}
+
+/* 봇: 왼쪽 정렬 */
+.cw-row.bot {
+  justify-content: flex-start;
+}
+
+/* 봇 아바타 */
+.cw-bot-avatar {
+  width: 36px;
+  height: 36px;
+  background-color: #eff6ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+
+/* 말풍선 공통 */
+.cw-bubble {
+  max-width: 75%;
+  padding: 14px 18px;
   font-size: 15px;
-  margin-bottom: 0; /* gap으로 간격 처리 */
+  line-height: 1.6;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(30, 58, 138, 0.05);
+  word-break: break-word;
+  display: flex;
+  flex-direction: column;
 }
 
-.chat-bubble.bot {
-  align-self: flex-start;
-  background: #f4e5f7;
-  color: #333;
-  border-top-left-radius: 0;
-}
-
-.chat-bubble.user {
+/* 시간 표시 */
+.cw-time {
+  font-size: 10px;
+  margin-top: 6px;
+  opacity: 0.7;
   align-self: flex-end;
-  background: #ede9fe;
-  color: #333;
-  border-top-right-radius: 0;
+}
+
+/* 유저 말풍선 (Deep Blue) */
+.user-bubble {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-radius: 20px 20px 4px 20px; /* 오른쪽 아래만 뾰족하게 */
+}
+
+.user-bubble .cw-time {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 봇 말풍선 (White Card) */
+.bot-bubble {
+  background: white;
+  color: #334155;
+  border: 1px solid #eef2ff;
+  border-radius: 20px 20px 20px 4px; /* 왼쪽 아래만 뾰족하게 */
+}
+
+.bot-bubble .cw-time {
+  color: #94a3b8;
 }

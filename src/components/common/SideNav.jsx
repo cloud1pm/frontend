@@ -3,60 +3,58 @@ import { NavLink } from "react-router-dom";
 import "./SideNav.css";
 
 export default function SideNav({ user, onLogout }) {
-  const navLinkClass = ({ isActive }) => (isActive ? "active" : "");
+  const navLinkClass = ({ isActive }) => (isActive ? "nav-item active" : "nav-item");
 
   const displayName = user?.nickname || "사용자";
-
-  const profileImage =
-    user?.profileImageUrl ||
-    user?.profileImage ||
-    user?.avatarUrl ||
-    null;
+  const profileChar = displayName.charAt(0).toUpperCase();
 
   return (
-    <aside className="side-nav">
-      <div className="profile">
-        <div className="profile-pic">
-          {/** {profileImage ? (
-            <img src={profileImage} alt={displayName} />
-           : ( 
-            <div className="profile-pic-placeholder">
-             {displayName.charAt(0).toUpperCase()}
-            </div>
-          )}**/}
+    <aside className="sidenav">
+      {/* 프로필 영역 */}
+      <div className="profile-section">
+        <div className="profile-avatar">
+          {/* 이미지 URL이 있다면 img 태그로 교체 가능 */}
+          <span className="profile-char">{profileChar}</span>
         </div>
-        <span className="username">{displayName}</span>
+        <div className="profile-info">
+          <span className="username">{displayName}</span>
+          <span className="user-level">Lv.{user?.characterLevel || 1} 눈송이</span>
+        </div>
       </div>
 
-      <nav>
+      {/* 메뉴 영역 */}
+      <nav className="nav-menu">
         <ul>
           <li>
             <NavLink to="/chat" className={navLinkClass}>
-              채팅
+              <span className="nav-icon">💬</span> 채팅
             </NavLink>
           </li>
           <li>
             <NavLink to="/report" className={navLinkClass}>
-              감정 리포트
+              <span className="nav-icon">📊</span> 감정 리포트
             </NavLink>
           </li>
           <li>
             <NavLink to="/community" className={navLinkClass}>
-              커뮤니티
+              <span className="nav-icon">🏘️</span> 커뮤니티
             </NavLink>
           </li>
           <li>
             <NavLink to="/character" className={navLinkClass}>
-              캐릭터
+              <span className="nav-icon">☃️</span> 캐릭터
             </NavLink>
           </li>
         </ul>
       </nav>
 
+      {/* 하단 로그아웃 */}
       {onLogout && (
-        <button className="side-nav-logout" onClick={onLogout}>
-          로그아웃
-        </button>
+        <div className="logout-section">
+          <button className="logout-btn" onClick={onLogout}>
+            로그아웃
+          </button>
+        </div>
       )}
     </aside>
   );

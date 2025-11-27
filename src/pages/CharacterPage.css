@@ -1,596 +1,429 @@
-/* ===========================
-   기본 레이아웃
-=========================== */
+/* CharacterPage.css */
 
-.character-page {
-  min-height: 100vh;
-  background: #f4f7fc;
-  padding: 2rem 1rem;
-}
-
-.character-container {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-/* ===========================
-   로딩 & 에러 상태
-=========================== */
-
-.loading-container,
-.error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 50vh;
-  text-align: center;
-}
-
-.loading-spinner {
-  font-size: 4rem;
-  animation: spin 2s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.loading-text {
-  color: #6b7280;
-  font-weight: 500;
-  font-size: 1rem;
-}
-
-.error-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-}
-
-.error-text {
-  color: #374151;
-  font-weight: 500;
-  margin-bottom: 1.5rem;
-}
-
-.retry-button {
-  padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
-  border: none;
-  border-radius: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.retry-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-}
-
-/* ===========================
-   헤더
-=========================== */
-
-.page-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 0.5rem;
-}
-
-.page-subtitle {
-  color: #6b7280;
-  font-size: 0.95rem;
-}
-
-/* ===========================
-   메인 캐릭터 카드
-=========================== */
-
-.character-main-card {
-  background: white;
-  border-radius: 2rem;
-  padding: 2rem;
-  margin-bottom: 2rem; /* 간격 조정 */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  position: relative;
-  overflow: hidden;
-}
-
-.card-background {
-  position: absolute;
-  inset: 0;
-  opacity: 0.05;
-}
-
-.gradient-blue { background: linear-gradient(135deg, #60a5fa 0%, #22d3ee 100%); }
-.gradient-cyan { background: linear-gradient(135deg, #22d3ee 0%, #60a5fa 100%); }
-.gradient-indigo { background: linear-gradient(135deg, #93c5fd 0%, #a78bfa 100%); }
-.gradient-purple { background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%); }
-
-/* 중앙 정렬을 위한 정보 섹션 수정 */
-.character-info-section {
-  position: relative;
-  display: flex;
-  flex-direction: column; /* 수직 정렬 */
-  align-items: center; /* 중앙 정렬 */
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  text-align: center; /* 내부 텍스트 중앙 정렬 */
-}
-
-/* 큰 캐릭터 이미지 */
-.large-avatar .character-avatar {
-  width: 20rem; /* 크게 확대 */
-  height: 20rem;
- /* box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4); /* 그림자 더 강조 */
-  margin-bottom: 0.5rem;
-}
-
-.character-avatar-wrapper {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.character-avatar {
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.character-details {
-  flex: 1;
-  text-align: center;
-}
-
-.character-name {
-  font-size: 1.8rem; /* 크게 강조 */
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
-}
-
-.character-level-name {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 0.25rem 1rem;
-  border-radius: 1rem;
-  display: inline-block;
-  margin-bottom: 1rem;
-}
-
-/* STATS GRID - 2x1로 변경 */
-.character-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+.cp-wrapper {
   width: 100%;
-  max-width: 400px; /* 최대 폭 제한으로 중앙에 모이도록 */
-  margin-top: 1rem;
-}
-
-.stat-card {
-  padding: 1rem;
-  border-radius: 0.75rem; /* 살짝 덜 둥글게 */
-  border: none; /* 테두리 제거 */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* 깔끔한 그림자 */
-  text-align: left;
-}
-
-.stat-amber {
-  background: #fffbeb; /* 더 밝게 */
-}
-
-.stat-purple {
-  background: #f5f3ff; /* 더 밝게 */
-}
-
-.stat-icon-wrapper {
+  height: 100vh;
+  background-color: #fdfbf7; /* Warm Cream */
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: "Pretendard", sans-serif;
+  color: #1e3a8a;
 }
 
-.stat-icon {
-  font-size: 1rem;
-}
-
-.stat-label {
-  font-size: 0.8rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.stat-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-
-/* ===========================
-   진행도 바
-=========================== */
-
-.progress-section {
-  margin-bottom: 1.5rem;
-}
-
-.progress-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-.progress-label {
-  color: #374151;
-  font-weight: 500;
-  font-size: 0.9rem;
-}
-
-.progress-value {
-  color: #6366f1;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.progress-bar-wrapper {
-  height: 0.75rem;
-  background: #f3f4f6;
-  border-radius: 1rem;
-  overflow: hidden;
-  margin-bottom: 0.75rem;
-}
-
-.progress-bar-fill {
+.cp-container {
+  width: 100%;
+  max-width: 1100px;
   height: 100%;
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
-  border-radius: 1rem;
-  transition: width 0.5s ease-out;
+  max-height: 800px;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
 }
 
-.progress-description {
-  text-align: center;
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.progress-description strong {
-  color: #6366f1;
-  font-weight: 700;
-}
-
-/* ===========================
-   밥 주기 버튼 (원래 디자인 복원 및 개선)
-=========================== */
-
-.button-container {
+/* 왼쪽 패널 */
+.cp-left-panel {
+  background: white;
+  border-radius: 32px;
+  box-shadow: 0 20px 40px rgba(30, 58, 138, 0.08);
+  padding: 40px;
   display: flex;
-  justify-content: center;
-  margin-top: 1.5rem;
-  width: 100%;
-}
-
-.feed-button {
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   position: relative;
-  z-index: 10;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
-  font-size: 1.1rem;
-  font-weight: 700;
-  padding: 1rem 2rem;
-  border: none;
-  border-radius: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
-  width: 90%;
-  max-width: 400px;
+  overflow: hidden;
+  border: 1px solid #dbeafe;
 }
 
-.feed-button:hover:not(.feed-button-disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.5);
+.cp-left-panel::before {
+  content: "";
+  position: absolute;
+  top: -100px;
+  left: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, #eff6ff 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: 0;
 }
 
-.feed-button:active:not(.feed-button-disabled) {
-  transform: translateY(0);
-}
-
-.feed-button-disabled {
-  background: #e5e7eb;
-  color: #9ca3af;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-}
-
-.feed-button-success {
-  background: linear-gradient(135deg, #e15757 0%, #f7b1b1 100%);
-  animation: successPulse 0.5s ease;
-}
-
-@keyframes successPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
-}
-
-.button-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.button-spinner {
-  animation: spin 1s linear infinite;
-}
-
-/* ===========================
-   보유 밥 양 (중앙 섹션)
-=========================== */
-
-.rice-mid-section {
-  background: white; /* 배경을 흰색 카드로 변경 */
-  border-radius: 1.5rem; /* 둥글게 */
-  padding: 1.5rem;
+.cp-room-header {
+  z-index: 1;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); /* 부드러운 그림자 */
-  margin-bottom: 2rem; /* 컨텐츠 그리드와의 간격 */
-  border: 1px solid #e5e7eb;
 }
 
-.rice-mid-section .rice-label {
-  color: #6b7280;
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-}
-
-.rice-mid-section .rice-count-mid {
-  font-size: 2.5rem; /* 크기 조정 */
-  font-weight: 700;
-  color: #6366f1; /* 메인 컬러 사용 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
+.cp-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1e40af;
   margin: 0;
 }
 
-.rice-mid-section .rice-icon {
-  font-size: 2.5rem;
+.cp-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 4px;
+  display: block;
 }
 
-/* ===========================
-   컨텐츠 그리드 (나란히 배치)
-=========================== */
-
-.content-grid {
-  display: grid;
-  /* 모바일에서는 1줄, 데스크탑에서는 2줄 나란히 */
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.content-card {
-  background: white;
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.header-icon {
-  font-size: 1.25rem;
-}
-
-.card-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-/* ===========================
-   비활성화된 아이템 스타일 (성장 단계, 밥 획득 방법)
-=========================== */
-
-.non-interactive-item {
-  cursor: default !important; /* 마우스 커서 변경 방지 */
-  pointer-events: none; /* 클릭 이벤트 완벽 차단 */
-  transition: all 0.1s; /* hover 효과 제거를 위해 짧게 설정 */
-}
-
-/* hover 효과 제거 */
-.stages-list .stage-item:hover,
-.missions-list .mission-item:hover {
-  background: #f9fafb; /* 기본 배경색 유지 */
-  transform: none; /* 움직임 효과 제거 */
-  box-shadow: none;
-}
-
-/* ===========================
-   성장 단계 (미니멀화 유지)
-=========================== */
-
-.stages-list {
+/* 캐릭터 영역 */
+.cp-character-area {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  z-index: 1;
 }
 
-.stage-item {
+.cp-avatar-container {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.cp-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 15px rgba(30, 58, 138, 0.15));
+}
+
+.bounce {
+  animation: bounce-heart 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes bounce-heart {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.cp-heart-effect {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 32px;
+  animation: floatUp 1s ease-out forwards;
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-40px); opacity: 0; }
+}
+
+.cp-character-info {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.cp-char-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: #172554;
+  margin: 0;
+}
+
+.cp-char-level {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 6px;
+  display: inline-block;
+}
+
+/* 프로그레스 바 */
+.cp-progress-container {
+  width: 100%;
+  max-width: 280px;
+}
+
+.cp-progress-labels {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 0.8rem 1rem;
-  border-radius: 0.75rem;
-  background: #f9fafb;
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 6px;
+  font-weight: 500;
 }
 
-.stage-item-active {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  transform: none;
+.cp-progress-bar-bg {
+  width: 100%;
+  height: 10px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.stage-item-completed {
-  background: #f3f4f6;
-  opacity: 0.8;
+.cp-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  border-radius: 10px;
+  transition: width 0.5s ease;
 }
 
-.stage-info {
+.cp-progress-msg {
+  font-size: 12px;
+  color: #94a3b8;
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* 밥 주기 버튼 */
+.cp-feed-btn {
+  width: 100%;
+  max-width: 300px;
+  padding: 16px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 8px;
+  z-index: 2;
 }
 
-.stage-emoji {
-  opacity: 0.5;
+.cp-feed-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.4);
 }
 
-.stage-emoji-active {
-  opacity: 1;
-  animation: bounce 1s ease infinite; /* 활성 애니메이션 유지 */
+.cp-feed-btn:active {
+  transform: scale(0.98);
 }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+.cp-feed-btn.disabled {
+  background: #cbd5e1;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
-.stage-name {
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.stage-item-active .stage-name {
-  color: #6366f1;
-}
-
-.stage-level {
-  font-size: 0.75rem;
-  color: #9ca3af;
-}
-
-/* ===========================
-   데일리 미션 (미니멀화 유지)
-=========================== */
-
-.missions-list {
+/* 오른쪽 패널 */
+.cp-right-panel {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 20px;
+  height: 100%;
+  overflow-y: auto;
 }
 
-.mission-item {
-  padding: 0.8rem 1rem;
-  border-radius: 0.75rem;
-  border: 2px solid; /* 테두리 복원하여 명확하게 */
-  box-shadow: none;
-}
-
-.mission-pink { border-color: #e4c8f0; background: #f7eeff; }
-.mission-blue { border-color: #e4c8f0; background: #f7eeff; }
-.mission-red { border-color: #e4c8f0; background: #f7eeff; }
-.mission-amber { border-color: #e4c8f0; background: #f7eeff; }
-
-.mission-icon { font-size: 1.5rem; }
-.mission-title { font-weight: 500; color: #374151; }
-
-.mission-points {
+.cp-card {
   background: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.9rem;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(30, 58, 138, 0.04);
+  border: 1px solid #eff6ff;
+}
+
+.cp-card-title {
+  font-size: 16px;
   font-weight: 700;
-  color: #6366f1;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  color: #1e3a8a;
+  margin: 0 0 16px 0;
 }
 
-.missions-hint {
-  background: #f1f5f9;
-  border: 2px solid #c7d2fe;
-  padding: 1rem;
-  border-radius: 0.75rem;
+/* 스탯 카드 */
+.cp-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
 }
 
-.missions-hint p {
-  text-align: center;
-  color: #4b5563;
-  font-size: 0.9rem;
+.cp-rice-display {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.cp-rice-icon {
+  font-size: 40px;
+  background: #eff6ff;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+}
+
+.cp-rice-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.cp-rice-text .label {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.cp-rice-text .count {
+  font-size: 28px;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.cp-mini-stats {
+  display: flex;
+  justify-content: space-around;
+}
+
+.cp-mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.cp-mini-stat .emoji {
+  font-size: 18px;
+}
+
+/* 미션 리스트 */
+.cp-mission-list {
+  list-style: none;
+  padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* ===========================
-   하단 푸터 (이전 푸터는 삭제)
-=========================== */
-.rice-footer {
-  display: none; 
+.cp-mission-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #334155;
+  transition: transform 0.2s;
 }
 
-
-/* ===========================
-   반응형
-=========================== */
-
-@media (max-width: 768px) {
-  .character-stats-grid {
-    grid-template-columns: 1fr;
-  }
+.cp-mission-list li:hover {
+  transform: translateX(4px);
+  background: #eff6ff;
 }
 
-@media (max-width: 480px) {
-  .character-main-card,
-  .content-card,
-  .rice-mid-section {
-    border-radius: 1.5rem;
-    padding: 1.25rem;
-  }
+.cp-mission-list .icon { margin-right: 10px; }
+.cp-mission-list .text { flex: 1; font-weight: 500; }
+.cp-mission-list .reward {
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
 
-  .character-info-section {
-    gap: 1rem;
-  }
-  
-  .large-avatar .character-avatar {
-    width: 8rem;
-    height: 8rem;
-  }
+/* 성장 지도 */
+.cp-stage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding-left: 8px;
+}
 
-  .character-name {
-    font-size: 1.5rem;
-  }
+.cp-stage-list::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 14px;
+  width: 2px;
+  background: #e2e8f0;
+  z-index: 0;
+}
 
-  .rice-mid-section .rice-count-mid {
-    font-size: 2rem;
-  }
+.cp-stage-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+  padding: 8px 0;
+}
 
-  .rice-mid-section .rice-icon {
-    font-size: 2rem;
-  }
+.cp-stage-item .dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  border: 3px solid white;
+  box-shadow: 0 0 0 1px #cbd5e1;
+}
+
+.cp-stage-item.passed .dot {
+  background: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.cp-stage-item.current .dot {
+  background: #2563eb;
+  transform: scale(1.2);
+  box-shadow: 0 0 0 2px #bfdbfe;
+}
+
+.cp-stage-item .info {
+  font-size: 14px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cp-stage-item.current .info {
+  color: #1e3a8a;
+  font-weight: 700;
+}
+
+.cp-stage-item .badge {
+  font-size: 10px;
+  background: #2563eb;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+@media (max-width: 900px) {
+  .cp-wrapper { height: auto; min-height: 100vh; padding: 16px; }
+  .cp-container { grid-template-columns: 1fr; max-height: none; gap: 16px; }
+  .cp-left-panel { padding: 32px 20px; }
+  .cp-right-panel { overflow-y: visible; }
+}
+
+.cp-loading, .cp-error {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #f0f4ff;
+  color: #1e3a8a;
+  gap: 16px;
 }

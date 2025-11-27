@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FiInfo } from "react-icons/fi";
-import { useNavigate } from "react-router-dom"; // 👈 1. useNavigate import
+import { FiInfo, FiMenu } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 import ChatWindow from "../components/chat/ChatWindow";
 import MessageInput from "../components/chat/MessageInput";
 import ChatSidebar from "../components/chat/ChatSidebar";
@@ -22,207 +22,124 @@ export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const scrollerRef = useRef(null);
   const { user } = useAuth();
-  const navigate = useNavigate(); // 👈 2. useNavigate 훅 사용
+  const navigate = useNavigate();
 
-  const displayName =
-    user?.nickname ||
-    user?.username ||
-    user?.email?.split("@")[0] ||
-    "친구";
+  const displayName = user?.nickname || "친구";
 
-  /* ----------------------------------------------------
-   * 1) 페이지 로드시 세션 목록 가져오기 & 새 세션 생성
-   * ---------------------------------------------------- */
   useEffect(() => {
     const initSessions = async () => {
       try {
         setIsLoading(true);
         const sessionList = await chatAPI.getSessions();
-        
         if (sessionList.length > 0) {
-          // 기존 세션이 있으면 가장 최근 세션 선택
           setSessions(sessionList);
           setCurrentSessionId(sessionList[0].sessionId);
-          
-          // 해당 세션의 메시지 로드
           const msgs = await chatAPI.getSessionMessages(sessionList[0].sessionId);
           setMessages(msgs);
         } else {
-          // 세션이 없으면 새로 생성
           const newSession = await chatAPI.createSession("새로운 대화");
           setSessions([newSession]);
           setCurrentSessionId(newSession.sessionId);
           setMessages([]);
         }
       } catch (err) {
-        console.error("세션 초기화 실패:", err);
         setError("채팅을 불러올 수 없습니다.");
       } finally {
         setIsLoading(false);
       }
     };
-
     initSessions();
   }, []);
 
-  /* ----------------------------------------------------
-   * 2) 세션 전환시 메시지 로드
-   * ---------------------------------------------------- */
   useEffect(() => {
     if (!currentSessionId) return;
-
     const loadMessages = async () => {
       try {
         setIsLoading(true);
         const msgs = await chatAPI.getSessionMessages(currentSessionId);
         setMessages(msgs);
       } catch (err) {
-        console.error("메시지 로드 실패:", err);
         setError("메시지를 불러올 수 없습니다.");
       } finally {
         setIsLoading(false);
       }
     };
-
     loadMessages();
   }, [currentSessionId]);
 
-  /* ----------------------------------------------------
-   * 3) 메시지 스크롤 자동 최하단
-   * ---------------------------------------------------- */
   useEffect(() => {
     if (scrollerRef.current) {
       scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
     }
   }, [messages]);
 
-  /* ----------------------------------------------------
-   * 4) 새 채팅 생성
-   * ---------------------------------------------------- */
   const handleCreateSession = async () => {
     try {
       const today = new Date().toISOString().slice(0, 10);
-      const title = `${today} 대화`;
-
-      const newSession = await chatAPI.createSession(title);
-
+      const newSession = await chatAPI.createSession(`${today} 대화`);
       setSessions((prev) => [newSession, ...prev]);
       setCurrentSessionId(newSession.sessionId);
       setMessages([]);
     } catch (err) {
-      console.error("세션 생성 실패:", err);
       setError("새 채팅을 만들 수 없습니다.");
     }
   };
 
-  /* ----------------------------------------------------
-   * 5) 세션 선택
-   * ---------------------------------------------------- */
-  const handleSelectSession = (sessionId) => {
-    setCurrentSessionId(sessionId);
-  };
+  const handleSelectSession = (id) => setCurrentSessionId(id);
 
-  /* ----------------------------------------------------
-   * 6) 세션 삭제
-   * ---------------------------------------------------- */
-  const handleDeleteSession = async (sessionId) => {
+  const handleDeleteSession = async (id) => {
+    if (!window.confirm("정말 삭제하시겠어요?")) return;
     try {
-      await chatAPI.deleteSession(sessionId);
-      
-      const remainingSessions = sessions.filter(
-        (s) => s.sessionId !== sessionId
-      );
-      setSessions(remainingSessions);
-
-      // 삭제한 세션이 현재 선택된 세션이면
-      if (currentSessionId === sessionId) {
-        if (remainingSessions.length > 0) {
-          setCurrentSessionId(remainingSessions[0].sessionId);
-        } else {
-          // 세션이 하나도 없으면 새로 생성
-          handleCreateSession();
-        }
+      await chatAPI.deleteSession(id);
+      const remaining = sessions.filter((s) => s.sessionId !== id);
+      setSessions(remaining);
+      if (currentSessionId === id) {
+        if (remaining.length > 0) setCurrentSessionId(remaining[0].sessionId);
+        else handleCreateSession();
       }
-    } catch (err) {
-      console.error("세션 삭제 실패:", err);
-      setError("채팅을 삭제할 수 없습니다.");
+    } catch {
+      setError("삭제 실패");
     }
   };
 
-  /* ----------------------------------------------------
-   * 7) 세션 제목 수정
-   * ---------------------------------------------------- */
-  const handleUpdateTitle = async (sessionId, newTitle) => {
+  const handleUpdateTitle = async (id, newTitle) => {
     try {
-      const updated = await chatAPI.updateSessionTitle(sessionId, newTitle);
+      const updated = await chatAPI.updateSessionTitle(id, newTitle);
       setSessions((prev) =>
-        prev.map((s) =>
-          s.sessionId === sessionId
-            ? { ...s, title: updated.title, updatedAt: updated.updatedAt }
-            : s
-        )
+        prev.map((s) => (s.sessionId === id ? { ...s, title: updated.title } : s))
       );
-    } catch (err) {
-      console.error("제목 수정 실패:", err);
-      setError("제목을 수정할 수 없습니다.");
+    } catch {
+      setError("수정 실패");
     }
   };
 
-  /* ----------------------------------------------------
-   * 8) 메시지 전송
-   * ---------------------------------------------------- */
   const handleSend = async (input) => {
     const trimmed = input.trim();
     if (!trimmed || isSending || !currentSessionId) return;
 
-    setError(null);
-
-    // 사용자 메시지 추가
-    const userMsg = {
-      message: trimmed,
-      isUserMessage: true,
-      createdAt: new Date().toISOString(),
-    };
+    const userMsg = { message: trimmed, isUserMessage: true, createdAt: new Date().toISOString() };
     setMessages((prev) => [...prev, userMsg]);
-
     setIsSending(true);
 
     try {
-      // 세션 기반 메시지 전송 API 사용
       const response = await chatAPI.sendSessionMessage(currentSessionId, trimmed);
-
-      // 봇 메시지 추가
       const botMsg = {
         message: response.message,
         isUserMessage: false,
         sentiment: response.sentiment,
         createdAt: response.createdAt,
       };
-
       setMessages((prev) => [...prev, botMsg]);
-
-      // 세션 목록에서 현재 세션을 맨 위로 이동 (최근 업데이트 시간 반영)
       setSessions((prev) => {
         const updated = prev.map((s) =>
-          s.sessionId === currentSessionId
-            ? { ...s, updatedAt: new Date().toISOString() }
-            : s
+          s.sessionId === currentSessionId ? { ...s, updatedAt: new Date().toISOString() } : s
         );
-        return updated.sort(
-          (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-        );
+        return updated.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
       });
     } catch (err) {
-      console.error("메시지 전송 실패:", err);
-      setError("메시지를 전송하는 중 문제가 발생했습니다.");
-
       setMessages((prev) => [
         ...prev,
-        {
-          message: "죄송해요, 지금은 답변을 드릴 수 없어요.",
-          isUserMessage: false,
-          isError: true,
-        },
+        { message: "오류가 발생했어요. 잠시 후 다시 시도해주세요.", isUserMessage: false, isError: true },
       ]);
     } finally {
       setIsSending(false);
@@ -230,77 +147,61 @@ export default function ChatPage() {
   };
 
   const hasMessages = messages.length > 0;
-  const notReady = !currentSessionId || isLoading;
 
   return (
-    <div className="chat-page-container">
-      {/* 채팅 사이드바 */}
-      <ChatSidebar
-      sessions={sessions}
-      currentSessionId={currentSessionId}
-      onSelectSession={handleSelectSession}
-      onCreateSession={handleCreateSession}
-      onDeleteSession={handleDeleteSession}
-      onUpdateTitle={handleUpdateTitle}
-      sidebarOpen={sidebarOpen}
-      onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-    />
+    <div className="chat-page-wrapper">
+      <div className={`chat-sidebar-container ${sidebarOpen ? "open" : "closed"}`}>
+        <ChatSidebar
+          sessions={sessions}
+          currentSessionId={currentSessionId}
+          onSelectSession={handleSelectSession}
+          onCreateSession={handleCreateSession}
+          onDeleteSession={handleDeleteSession}
+          onUpdateTitle={handleUpdateTitle}
+          sidebarOpen={sidebarOpen}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        />
+      </div>
 
-      {/* 메인 채팅 영역 */}
-      <div className="layout chat-page">
-        <main className="chat-main">
-          <header className="chat-header">
-            <div className="chat-header-left">
-              <FiInfo className="chat-header-icon" />
-              <div className="chat-header-text-group">
-                <span className="chat-header-greeting">
-                  {displayName}님, 안녕하세요!
-                </span>
-                <span className="chat-header-text">
-                  대화 내용을 분석하여 감정 상태를 파악하고, 상황에 맞는 도움을 제공합니다.
-                </span>
+      <main className="chat-main-area">
+        <div className="chat-card">
+          <header className="chat-card-header">
+            <div className="header-left">
+              {!sidebarOpen && (
+                <button className="menu-btn" onClick={() => setSidebarOpen(true)}>
+                  <FiMenu />
+                </button>
+              )}
+              <div className="header-titles">
+                <h2 className="header-greeting">안녕, {displayName}! 👋</h2>
+                <span className="header-sub">오늘 하루는 어땠나요?</span>
               </div>
-             
             </div>
-
+            <div className="header-right">
+              <FiInfo className="info-icon" title="감정 분석 중..." />
+            </div>
           </header>
 
-          <div className="chat-center">
+          <div className="chat-content-area">
             {!hasMessages ? (
-              <div className="empty-chat">
-                <div className="empty-center">
-                  <div className="welcome-message">
-                    <h1>오늘 하루 어떤 감정을 느꼈나요?</h1>
-                    <p>편안하게 이야기를 시작해보세요</p>
-                  </div>
-                  <MessageInput 
-                    onSend={handleSend} 
-                    disabled={isSending || notReady} 
-                  />
-                  <div className="start-hint">준비되면 얘기해 주세요.</div>
-                </div>
+              <div className="empty-chat-view">
+                <div className="empty-icon">☁️</div>
+                <h3>오늘의 이야기를 들려주세요</h3>
+                <p>사소한 이야기도 괜찮아요. 제가 들어줄게요.</p>
               </div>
             ) : (
-              <>
-                <div className="chat-scroller" ref={scrollerRef}>
-                  <ChatWindow messages={messages} />
-                </div>
-
-                <div className="chat-input-wrap">
-                  <MessageInput 
-                    onSend={handleSend} 
-                    disabled={isSending || notReady}
-                  />
-                  <div className="disclaimer">준비되면 얘기해 주세요.</div>
-                </div>
-              </>
+              <div className="chat-messages-scroller" ref={scrollerRef}>
+                <ChatWindow messages={messages} />
+                {isSending && <div className="typing-indicator">답변을 작성 중이에요... ✍️</div>}
+              </div>
             )}
-
-            {error && <div className="chat-error">{error}</div>}
-            {isLoading && <div className="chat-loading">불러오는 중...</div>}
           </div>
-        </main>
-      </div>
+
+          <div className="chat-input-area">
+            <MessageInput onSend={handleSend} disabled={isSending || isLoading} />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
