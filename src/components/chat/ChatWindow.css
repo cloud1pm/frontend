@@ -49,6 +49,7 @@
   word-break: break-word;
   display: flex;
   flex-direction: column;
+  white-space: pre-wrap;
 }
 
 /* 시간 표시 */
