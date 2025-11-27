@@ -77,8 +77,9 @@ const EmotionReportPage = () => {
   // ✔ 감정 점수는 백엔드의 -1.0 ~ 1.0 스케일 사용
   const normalizeScore = (value) => {
   if (value === null || value === undefined) return 0;
-  return Number(value) * 10;   // -1~1 → -10~10 변환
-};
+  const scaled = Number(value) * 10; // -1~1 → -10~10
+  return Math.round(scaled * 10) / 10; // 소수점 1자리
+}
 
 
   return (
@@ -155,7 +156,7 @@ const EmotionReportPage = () => {
               <YAxis
                 stroke="#9ca3af"
                 style={{ fontSize: "12px" }}
-                domain={["auto", "auto"]}
+                domain={["-10", "10"]}
                 allowDataOverflow={true}
               />
 
