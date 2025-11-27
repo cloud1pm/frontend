@@ -36,7 +36,7 @@ const CharacterPage = () => {
     setError(null);
     try {
       const data = await userAPI.getCharacterInfo();
-      console.log("✅ 캐릭터 정보 로드:", data);
+      //console.log("캐릭터 정보 로드:", data);
       
       setCharacter({
         name: "눈송이",
@@ -46,7 +46,7 @@ const CharacterPage = () => {
         daysStreak: data.consecutiveDays,
       });
     } catch (error) {
-      console.error("❌ 캐릭터 로드 실패:", error);
+      //console.error("❌ 캐릭터 로드 실패:", error);
       setError("캐릭터 정보를 불러올 수 없습니다.");
     } finally {
       setLoading(false);
@@ -72,11 +72,11 @@ const CharacterPage = () => {
 
     try {
       const updatedData = await userAPI.feedCharacter();
-      console.log("🔥 Feed response:", updatedData);
+      //console.log("Feed response:", updatedData);
 
       const { newRiceCount, newLevel, message } = updatedData;
 
-      // ❗ 밥 부족
+      //  밥 부족
       if (message && message.includes("밥이 부족")) {
         alert(message);
         return;
@@ -103,7 +103,7 @@ const CharacterPage = () => {
       setTimeout(() => setFeedSuccess(false), 1000);
       
     } catch (error) {
-      console.error("🔥 밥 주기 실패:", error);
+      //console.error(" 밥 주기 실패:", error);
       
       const axiosError = error;
       if (axiosError.response) {

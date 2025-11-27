@@ -131,7 +131,7 @@ export const AuthProvider = ({ children }) => {
    * OAuth2 (구글 로그인)
    * ---------------------------------------------------- */
   const handleGoogleLogin = async (token) => {
-    console.log("🔵 [AuthContext] 구글 로그인 처리 시작");
+    //console.log(" [AuthContext] 구글 로그인 처리 시작");
 
     const raw = await googleCallbackApi(token);
 
@@ -152,7 +152,7 @@ export const AuthProvider = ({ children }) => {
    * 회원가입
    * ---------------------------------------------------- */
   const handleSignup = async (payload) => {
-    console.log("🔵 [AuthContext] 회원가입 시작");
+   // console.log("🔵 [AuthContext] 회원가입 시작");
     return await signupApi(payload);
   };
 
@@ -160,7 +160,7 @@ export const AuthProvider = ({ children }) => {
    * 로그아웃
    * ---------------------------------------------------- */
   const handleLogout = async () => {
-    console.log("🔵 [AuthContext] 로그아웃");
+    //console.log("🔵 [AuthContext] 로그아웃");
     try {
       await logoutApi();
     } catch {}

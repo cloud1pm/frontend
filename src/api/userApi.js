@@ -32,9 +32,9 @@ export const getRiskSolutions = async ({ riskLevel } = {}) => {
  * POST /api/user/encouragement
 **/
 export const saveEncouragement = async ({ message, emotion }) => {
-  console.log("🔵 [saveEncouragement] 요청 시작");
-  console.log("📝 Message:", message);
-  console.log("😊 Emotion:", emotion);
+  //console.log(" [saveEncouragement] 요청 시작");
+  //console.log("📝 Message:", message);
+  //console.log("😊 Emotion:", emotion);
   
   try {
 
@@ -43,14 +43,14 @@ export const saveEncouragement = async ({ message, emotion }) => {
       emotion 
     });
     
-    console.log("✅ [saveEncouragement] 응답:", data);
+    //console.log("✅ [saveEncouragement] 응답:", data);
     return data;
   } catch (error) {
-    console.error("❌ [saveEncouragement] 실패");
-    console.error("요청 URL:", error.config?.url);
-    console.error("요청 데이터:", error.config?.data);
-    console.error("응답 상태:", error.response?.status);
-    console.error("응답 데이터:", error.response?.data);
+    //console.error("❌ [saveEncouragement] 실패");
+    //console.error("요청 URL:", error.config?.url);
+    //console.error("요청 데이터:", error.config?.data);
+    //console.error("응답 상태:", error.response?.status);
+    //console.error("응답 데이터:", error.response?.data);
     throw error;
   }
 };

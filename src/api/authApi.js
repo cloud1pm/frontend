@@ -30,7 +30,7 @@ export const clearStoredSession = () => {
  *  API 호출
  * ---------------------------------------------------- */
 export const initiateGoogleLogin = () => {
-  console.log("🔵 [authApi] 구글 로그인 시작");
+  //console.log("🔵 [authApi] 구글 로그인 시작");
   window.location.href = "http://localhost:8080/oauth2/authorization/google";
 };
 

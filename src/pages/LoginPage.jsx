@@ -12,7 +12,6 @@ const LoginPage = () => {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
 useEffect(() => {
   //  로그인 페이지가 아닐 때는 절대 자동 이동하지 않는다
   if (location.pathname !== "/login") return;
