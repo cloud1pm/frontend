@@ -160,7 +160,7 @@ export default function EncouragementPage() {
           {/* 하단 버튼 그룹 */}
           <div className="enc-btn-group">
             <button className="enc-btn secondary" onClick={() => navigate("/chat")}>
-              다음에
+              채팅 페이지로
             </button>
             <button
               className="enc-btn primary"
