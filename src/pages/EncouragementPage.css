@@ -1,144 +1,279 @@
 /* EncouragementPage.css */
 
 .encouragement-page {
-  max-width: 500px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 48px 24px;
   text-align: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #FFF8F0 0%, #FFE5D9 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.encouragement-page h1 {
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #FFB4A2 0%, #E5989B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
 }
 
 .sub {
-  color: #666;
-  margin-bottom: 25px;
+  color: #6B7280;
+  margin-bottom: 32px;
+  font-size: 16px;
+  line-height: 1.6;
 }
 
 .encouragement-input {
   width: 100%;
-  height: 130px;
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-  resize: none;
-  font-size: 15px;
-  margin-bottom: 20px;
+  min-height: 150px;
+  padding: 20px 24px;
+  border-radius: 20px;
+  border: 2px solid #FFE5D9;
+  resize: vertical;
+  font-size: 16px;
+  margin-bottom: 24px;
   outline: none;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  color: #4A4A4A;
+  line-height: 1.8;
 }
 
-.recommend-title {
-  font-weight: bold;
-  margin: 10px 0 8px;
+.encouragement-input:focus {
+  border-color: #FFB4A2;
+  box-shadow: 0 4px 20px rgba(255, 180, 162, 0.2);
+}
+
+/* 감정 선택 섹션 */
+.emotion-section {
+  margin-bottom: 28px;
   text-align: left;
+}
+
+.emotion-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.emotion-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: white;
+  border: 2px solid #FFE5D9;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6B7280;
+}
+
+.emotion-btn:hover {
+  transform: translateY(-2px);
+  border-color: #FFB4A2;
+  background: rgba(255, 229, 217, 0.3);
+}
+
+.emotion-btn.selected {
+  background: linear-gradient(135deg, #FFB4A2 0%, #E5989B 100%);
+  border-color: #E5989B;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(229, 152, 155, 0.3);
+}
+
+.emotion-emoji {
+  font-size: 28px;
+}
+
+.emotion-label {
+  font-size: 14px;
+}
+
+/* 추천 메시지 */
+.recommend-title {
+  font-weight: 600;
+  margin: 16px 0 12px;
+  text-align: left;
+  color: #4A4A4A;
+  font-size: 15px;
 }
 
 .recommend-box {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 25px;
+  margin-bottom: 28px;
 }
 
 .recommend-chip {
-  background: #e5d8fb;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 18px;
+  background: white;
+  border: 2px solid #FFE5D9;
+  padding: 10px 20px;
+  border-radius: 20px;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.3s ease;
+  color: #6B7280;
 }
 
 .recommend-chip:hover {
-  background: #ffcfcf;
+  background: linear-gradient(135deg, rgba(255, 229, 217, 0.5) 0%, rgba(255, 180, 162, 0.3) 100%);
+  border-color: #FFB4A2;
+  color: #4A4A4A;
+  transform: translateY(-2px);
 }
 
-.submit-btn {
-  width: 100%;
-  padding: 14px 0;
-  background: #7c3aed;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.success-text {
-  margin-top: 15px;
-  color: #22c55e;
-  font-size: 15px;
-}
-.main-btn {
-  width: 100%;
-  padding: 14px 0;
-  background: #7c3aed;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: 0.2s;
-}
-
+/* 버튼 행 */
 .btn-row {
   display: flex;
   gap: 12px;
-  margin-top: 18px;
+  margin-top: 24px;
 }
-
 
 .sub-btn {
   flex: 1;
   padding: 16px 0;
-  background: #ffffff;
-  color: #555;
-  border: 1px solid #e5e5e5;
+  background: white;
+  color: #B5838D;
+  border: 2px solid #FFE5D9;
   border-radius: 20px;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.2s ease;
-  box-shadow: 0px 2px 6px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
 }
 
 .sub-btn:hover {
-  background: #f5f5f5;
+  background: rgba(255, 229, 217, 0.5);
+  border-color: #FFB4A2;
+  color: #E5989B;
 }
-
 
 .main-btn {
   flex: 1;
   padding: 16px 0;
-  background: #7c3aed;
+  background: linear-gradient(135deg, #FFB4A2 0%, #E5989B 100%);
   color: white;
   border: none;
   border-radius: 20px;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(229, 152, 155, 0.3);
 }
 
-.main-btn:hover {
-  background: #6b24d8;
+.main-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(229, 152, 155, 0.4);
 }
+
+.main-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 성공 메시지 */
+.success-text {
+  margin-top: 20px;
+  color: #10b981;
+  font-size: 16px;
+  font-weight: 600;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 이미 작성 완료 알림 */
+.encouragement-page > div[style*="linear-gradient(135deg, #fef3c7"] {
+  background: linear-gradient(135deg, #FFF8F0 0%, #FFE5D9 100%) !important;
+  border: 2px solid #FFB4A2 !important;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 24px;
+  animation: slideDown 0.5s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 감정 정보 간단 안내 */
 .emotion-info-simple {
-  margin-top: 20px;        /* 그래프와 붙는 것을 방지 */
-  margin-bottom: 16px;     /* 그래프 위쪽과도 공간 확보 */
-  background: #f9fafb;
-  padding: 14px 16px;
-  border-radius: 10px;
+  margin: 24px 0;
+  background: linear-gradient(135deg, #FFF8F0 0%, #FFE5D9 100%);
+  padding: 20px 24px;
+  border-radius: 20px;
   font-size: 14px;
-  color: #334155;
-  border: 1px solid #e2e8f0;
+  color: #4A4A4A;
+  border: 2px solid #FFE5D9;
+  line-height: 1.8;
+  text-align: left;
 }
 
 .emotion-info-simple p {
-  margin: 4px 0;
+  margin: 6px 0;
+}
+
+.emotion-info-simple strong {
+  color: #E5989B;
+  font-weight: 700;
 }
 
 .emotion-tip {
-  color: #64748b;
-  margin-top: 6px;
-  font-size: 13.5px;
+  color: #6B7280;
+  margin-top: 12px;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .encouragement-page {
+    padding: 32px 20px;
+  }
+
+  .encouragement-page h1 {
+    font-size: 26px;
+  }
+
+  .emotion-buttons {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .btn-row {
+    flex-direction: column;
+  }
 }

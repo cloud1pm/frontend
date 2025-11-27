@@ -1,33 +1,47 @@
 .chat-window {
   width: 100%;
-  max-width: 720px;
+  max-width: 800px;
   display: flex;
   flex-direction: column;
-  align-items: center; /* 수평 중앙 정렬 유지 */
-  gap: 12px; /* 메시지들 사이 간격 확보 */
+  align-items: center;
+  gap: 16px;
   box-sizing: border-box;
-  /* 기존 패딩(60px 0 100px) 제거 — 스크롤 컨테이너가 여백 담당 */
 }
 
 .chat-bubble {
   max-width: 70%;
-  padding: 14px 18px; /* 좀 더 여유 있게 */
-  border-radius: 16px;
-  line-height: 1.4;
-  font-size: 15px;
-  margin-bottom: 0; /* gap으로 간격 처리 */
+  padding: 18px 24px;
+  border-radius: 24px;
+  line-height: 1.6;
+  font-size: 16px;
+  margin-bottom: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  animation: bubbleIn 0.3s ease;
+}
+
+@keyframes bubbleIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .chat-bubble.bot {
   align-self: flex-start;
-  background: #f4e5f7;
-  color: #333;
-  border-top-left-radius: 0;
+  background: linear-gradient(135deg, white 0%, #FFE5D9 100%);
+  color: #4A4A4A;
+  border-top-left-radius: 6px;
+  border: 1px solid rgba(255, 180, 162, 0.2);
 }
 
 .chat-bubble.user {
   align-self: flex-end;
-  background: #ede9fe;
-  color: #333;
-  border-top-right-radius: 0;
+  background: linear-gradient(135deg, #DDD6FE 0%, #A78BFA 100%);
+  color: white;
+  border-top-right-radius: 6px;
+  box-shadow: 0 4px 16px rgba(167, 139, 250, 0.3);
 }

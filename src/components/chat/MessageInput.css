@@ -2,49 +2,53 @@
   display: flex;
   align-items: center;
   width: 100%;
-  max-width: 700px;
-  gap: 10px;
+  max-width: 800px;
+  gap: 12px;
 }
 
 .message-input input {
   flex: 1;
-  border: 1px solid #ddd;
-  border-radius: 24px;
-  padding: 12px 20px;
+  border: 2px solid #FFE5D9;
+  border-radius: 28px;
+  padding: 16px 24px;
   outline: none;
-  font-size: 15px;
+  font-size: 16px;
   background: white;
-  transition: border-color 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 12px rgba(255, 180, 162, 0.15);
 }
 
 .message-input input:focus {
-  border-color: #8b5cf6;
+  border-color: #FFB4A2;
+  box-shadow: 0 4px 20px rgba(255, 180, 162, 0.25);
 }
 
 .message-input input:disabled {
   background: #f3f4f6;
   cursor: not-allowed;
   color: #9ca3af;
+  border-color: #e5e7eb;
 }
 
 .message-input button {
   border: none;
   border-radius: 50%;
-  background: #8b5cf6;
+  background: linear-gradient(135deg, #FFB4A2 0%, #E5989B 100%);
   color: white;
-  width: 42px;
-  height: 42px;
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(229, 152, 155, 0.4);
 }
 
 .message-input button:hover {
-  background: #7c3aed;
-  transform: scale(1.05);
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(229, 152, 155, 0.5);
 }
 
 .message-input button:active {
@@ -56,4 +60,5 @@
   cursor: not-allowed;
   transform: none;
   color: #f9fafb;
+  box-shadow: none;
 }
