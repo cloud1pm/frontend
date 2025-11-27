@@ -78,10 +78,11 @@ const EmotionReportPage = () => {
 
   // ✔ -1.0 ~ 1.0 → -10 ~ +10 스케일, 소수점 1자리 유지
   const normalizeScore = (value) => {
-    if (value === null || value === undefined) return 0;
-    const scaled = Number(value) * 10;
-    return Math.round(scaled * 10) / 10; // 소수점 1자리
-  };
+  if (value === null || value === undefined) return 0;
+  const scaled = Number(value) * 10; // -1~1 → -10~10
+  return Math.round(scaled * 10) / 10; // 소수점 1자리
+}
+
 
   return (
     <div className="emotion-report-container">
@@ -155,7 +156,8 @@ const EmotionReportPage = () => {
               <YAxis
                 stroke="#9ca3af"
                 style={{ fontSize: "12px" }}
-                domain={[-10, 10]}
+                domain={["-10", "10"]}
+                allowDataOverflow={true}
               />
 
               {/* 0 기준선 */}
