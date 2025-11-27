@@ -1,215 +1,165 @@
-/* AuthPage.css - Warm & Deep Blue Theme */
-
-/* 배경 및 레이아웃 */
-.auth-wrapper {
-  width: 100%;
-  min-height: 100vh;
-  background-color: #fdfbf7; /* Warm Cream */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24px;
-  box-sizing: border-box;
-  font-family: "Pretendard", sans-serif;
+.auth-title + .auth-hero-text {
+  margin-top: -4px;
 }
 
-.auth-container {
+.plain-layout {
+  min-height: 100vh;
   width: 100%;
-  max-width: 440px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fdfbf7; /* Warm Cream - 통일 */
+  padding: 32px 16px;
+  box-sizing: border-box;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  border-radius: 24px; /* 20px → 24px */
+  box-shadow: 0 10px 30px rgba(30, 58, 138, 0.06); /* Primary Blue Shadow */
+  padding: 48px 48px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  border: 1px solid #eef2ff; /* Light Blue Border */
 }
 
-/* 헤더 영역 */
-.auth-header {
-  text-align: center;
+.auth-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+  text-align: left;
 }
 
-.auth-logo-icon {
+.auth-illustration {
   font-size: 40px;
-  display: block;
-  margin-bottom: 8px;
-  animation: float 3s ease-in-out infinite;
+  animation: floating 3s ease-in-out infinite;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+@keyframes floating {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.auth-hero-text {
+  font-size: 16px;
+  color: #64748b; /* 통일된 Gray */
+  line-height: 1.7;
 }
 
 .auth-title {
-  font-size: 24px;
-  font-weight: 800;
-  color: #1e3a8a; /* Deep Navy */
-  margin: 0 0 8px 0;
-}
-
-.auth-subtitle {
-  font-size: 15px;
-  color: #64748b;
+  font-size: 30px;
+  font-weight: 700;
+  color: #1e3a8a; /* Primary Blue Dark */
   margin: 0;
 }
 
-/* 메인 카드 */
-.auth-card {
-  background: white;
-  border-radius: 32px;
-  padding: 40px 32px;
-  box-shadow: 0 20px 40px rgba(30, 58, 138, 0.06);
-  border: 1px solid #eff6ff;
-  display: flex;
-  flex-direction: column;
+.auth-subtitle {
+  font-size: 14px;
+  color: #64748b; /* 통일된 Gray */
+  margin: 0;
+  line-height: 1.6;
 }
 
-/* 폼 요소 */
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
-.auth-input-group {
+.auth-field {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  align-items: stretch;
 }
 
-.auth-input-group label {
+.auth-label {
   font-size: 14px;
-  font-weight: 700;
-  color: #1e3a8a;
-  margin-left: 4px;
+  color: #374151; /* Darker Gray */
+  font-weight: 600;
+  text-align: left;
 }
 
 .auth-input {
   width: 100%;
-  padding: 14px 18px;
-  border-radius: 16px;
-  border: 2px solid #f1f5f9;
-  background-color: #f8fafc;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px; /* 10px → 12px */
   font-size: 15px;
-  color: #334155;
-  outline: none;
-  transition: all 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
 }
 
 .auth-input:focus {
-  border-color: #2563eb;
-  background-color: #fff;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
+  border-color: #2563eb; /* Primary Blue */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); /* Primary Blue Shadow */
+  outline: none;
 }
 
-.auth-input::placeholder {
-  color: #94a3b8;
-}
-
-/* 버튼 스타일 */
-.auth-btn-primary {
+.auth-submit {
   width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: white;
+  padding: 14px 16px;
   border: none;
-  border-radius: 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8); /* Primary Blue Gradient */
+  color: white;
   font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.25);
-}
-
-.auth-btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.35);
-}
-
-.auth-btn-primary:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.auth-btn-primary:disabled {
-  background: #cbd5e1;
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
-/* 구분선 */
-.auth-divider {
-  display: flex;
-  align-items: center;
-  margin: 24px 0;
-  color: #94a3b8;
-  font-size: 13px;
-}
-
-.auth-divider::before,
-.auth-divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background-color: #f1f5f9;
-}
-
-.auth-divider span {
-  padding: 0 12px;
-}
-
-/* 구글 로그인 버튼 */
-.auth-btn-google {
-  width: 100%;
-  padding: 14px;
-  background-color: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  font-size: 15px;
   font-weight: 600;
-  color: #475569;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3); /* Primary Blue Shadow */
 }
 
-.auth-btn-google:hover {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
-  transform: translateY(-1px);
+.auth-submit:disabled {
+  background: #cbd5e1; /* Neutral Gray */
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-/* 하단 링크 */
-.auth-footer-link {
-  text-align: center;
-  margin-top: 24px;
+.auth-submit:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.4);
+}
+
+.auth-footer {
   font-size: 14px;
   color: #64748b;
-}
-
-.auth-footer-link a {
-  color: #2563eb;
-  font-weight: 700;
-  text-decoration: none;
-  margin-left: 6px;
-}
-
-.auth-footer-link a:hover {
-  text-decoration: underline;
-}
-
-/* 에러 메시지 */
-.auth-error-msg {
-  background-color: #fee2e2;
-  color: #b91c1c;
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 14px;
   text-align: center;
-  margin-bottom: 16px;
-  border: 1px solid #fecaca;
+}
+
+.auth-link {
+  color: #2563eb; /* Primary Blue */
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+  color: #1d4ed8; /* Darker Blue on hover */
+}
+
+.auth-error {
+  background: #fee2e2;
+  color: #dc2626; /* Red - 에러는 동일 유지 */
+  padding: 12px 14px;
+  border-radius: 12px; /* 10px → 12px */
+  font-size: 14px;
+}
+
+.auth-hint {
+  font-size: 13px;
+  color: #94a3b8; /* Light Gray */
 }
 
 /* --- 회원가입용 추가 스타일 --- */
@@ -228,11 +178,206 @@
 }
 
 .auth-check-btn:hover {
-  background-color: #dbeafe;
+  background: #c7e1ff; /* 호버 시 조금 더 진한 연파랑 */
+  border-color: #60a5fa;
+  transform: translateY(-1px);
+}
+
+.auth-check-btn:active {
+  transform: scale(0.98);
+  background: #60a5fa;
+}
+
+/* Auth Wrapper (새로운 레이아웃용) */
+.auth-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  background: #fdfbf7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-logo-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 16px;
+  animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.auth-error-msg {
+  padding: 12px 16px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 12px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.auth-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.auth-input-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  text-align: left;
 }
 
 .auth-row {
   display: flex;
   gap: 8px;
-  align-items: flex-end;
+  align-items: stretch;
+}
+
+.auth-row .auth-input {
+  flex: 1;
+}
+
+/* Primary Button */
+.auth-btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+.auth-btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.4);
+}
+
+.auth-btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.auth-btn-primary:disabled {
+  background: #cbd5e1;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.auth-divider span {
+  padding: 0 16px;
+}
+
+/* Google Button */
+.auth-btn-google {
+  width: 100%;
+  padding: 12px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.auth-btn-google:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+}
+
+.auth-btn-google .google-icon {
+  flex-shrink: 0;
+}
+
+/* Footer Link */
+.auth-footer-link {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.auth-footer-link a {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.auth-footer-link a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 32px 24px;
+    border-radius: 20px;
+  }
+
+  .auth-title {
+    font-size: 26px;
+  }
+
+  .auth-logo-icon {
+    font-size: 40px;
+  }
 }
