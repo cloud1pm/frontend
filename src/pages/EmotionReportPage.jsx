@@ -59,22 +59,24 @@ const EmotionReportPage = () => {
     return `${month}/${day}`;
   };
 
+  // ✔ 랜덤 예시 데이터 (-10 ~ +10)
   const generateMockData = (periodType) => {
     const days = periodType === "week" ? 7 : 30;
     const today = new Date();
     const data = [];
+
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       data.push({
         date: formatDate(date),
-        score: Number((Math.random() * 2 - 1).toFixed(2)), // -1~1 랜덤
+        score: Number((Math.random() * 20 - 10).toFixed(1)), // -10~10
       });
     }
     return data;
   };
 
-  // ✔ 감정 점수는 백엔드의 -1.0 ~ 1.0 스케일 사용
+  // ✔ -1.0 ~ 1.0 → -10 ~ +10 스케일, 소수점 1자리 유지
   const normalizeScore = (value) => {
   if (value === null || value === undefined) return 0;
   const scaled = Number(value) * 10; // -1~1 → -10~10
@@ -108,15 +110,15 @@ const EmotionReportPage = () => {
         </button>
       </div>
 
+      {/* 점수 안내 */}
       <div className="emotion-info-simple">
-  <p>📘 <strong>감정 점수 안내</strong></p>
-  <p>감정 점수는 -10에서 +10 사이로 표현돼요.</p>
-  <p>0을 기준으로 위는 긍정☺️, 아래는 부정😞 감정을 의미해요. </p>
-  <p className="emotion-tip">
-    힘든 날이 있더라도 괜찮아요. 오늘을 되돌아보고 내가 설정한 작은 활동 하나만 실천해볼까요?
-  </p>
-</div>
-
+        <p>📘 <strong>감정 점수 안내</strong></p>
+        <p>감정 점수는 -10에서 +10 사이로 표현돼요.</p>
+        <p>0을 기준으로 위는 긍정☺️, 아래는 부정😞 감정을 의미해요. </p>
+        <p className="emotion-tip">
+          힘든 날이 있더라도 괜찮아요. 오늘을 되돌아보고 내가 설정한 작은 활동 하나만 실천해볼까요?
+        </p>
+      </div>
 
       {/* 차트 */}
       <div className="chart-container">
@@ -151,8 +153,6 @@ const EmotionReportPage = () => {
                 stroke="#9ca3af"
                 style={{ fontSize: "12px" }}
               />
-
-              {/* ✔ 음수 포함 domain */}
               <YAxis
                 stroke="#9ca3af"
                 style={{ fontSize: "12px" }}
@@ -160,7 +160,7 @@ const EmotionReportPage = () => {
                 allowDataOverflow={true}
               />
 
-              {/* ✔ 0 기준선 추가 */}
+              {/* 0 기준선 */}
               <ReferenceLine y={0} stroke="#cbd5e1" strokeDasharray="3 3" />
 
               <Tooltip

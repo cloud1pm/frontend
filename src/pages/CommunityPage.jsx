@@ -1,251 +1,105 @@
-// src/pages/CommunityPage.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { communityAPI } from "../api/communityApi";
 import "./CommunityPage.css";
 
-const ITEMS_PER_PAGE = 7; // 🟢 [추가] 페이지당 보여줄 개수 설정
-
-const COMMUNITY_TABS = [
+const ITEMS_PER_PAGE = 7;
+const TABS = [
   { id: "recent", label: "최신글" },
   { id: "popular", label: "인기글" },
   { id: "my-posts", label: "내 작성글" },
 ];
 
-const formatDate = (iso) =>
-  new Date(iso).toLocaleString("ko-KR", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-const buildPagination = (currentPage, totalPages) => {
-  if (totalPages <= 1) return [1];
-  if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
-
-  const pages = [1];
-  if (currentPage > 3) pages.push("prev-ellipsis");
-  const start = Math.max(2, currentPage - 1);
-  const end = Math.min(totalPages - 1, currentPage + 1);
-  for (let p = start; p <= end; p++) pages.push(p);
-  if (currentPage < totalPages - 2) pages.push("next-ellipsis");
-  pages.push(totalPages);
-  return pages;
-};
+const formatDate = (iso) => new Date(iso).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
 
 export default function CommunityPage() {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const [posts, setPosts] = useState([]); 
-  
-  const [activeTab, setActiveTab] = useState(COMMUNITY_TABS[0].id);
-  const [currentPage, setCurrentPage] = useState(1);
-  
+  const [posts, setPosts] = useState([]);
+  const [activeTab, setActiveTab] = useState("recent");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  //  [추가] 전체 데이터(posts)를 기반으로 총 페이지 수 계산
-  const totalPages = useMemo(() => {
-    if (posts.length === 0) return 1;
-    return Math.ceil(posts.length / ITEMS_PER_PAGE);
-  }, [posts]);
-
-  const visiblePosts = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    return posts.slice(startIndex, endIndex);
-  }, [currentPage, posts]);
-
   useEffect(() => {
-    if (location.state?.refresh) {
-      setRefreshKey((prev) => prev + 1);
-      window.history.replaceState({}, document.title);
-    }
+    if (location.state?.refresh) setRefreshKey((p) => p + 1);
   }, [location]);
 
-  /* -----------------------------------------------------------
-   * 데이터 불러오기 (한 번 로드하면 끝)
-   * ----------------------------------------------------------- */
   useEffect(() => {
-    let ignore = false;
-
     const loadPosts = async () => {
       setLoading(true);
-      setError(null);
-
       try {
-        const response = await communityAPI.getPosts({ tab: activeTab });
-
-        if (!ignore) {
-          let fetchedData = [];
-          
-          // 응답 형태가 배열인지 객체인지 체크해서 통일
-          if (Array.isArray(response?.items)) {
-            fetchedData = response.items;
-          } else if (Array.isArray(response)) {
-            fetchedData = response;
-          } else {
-            fetchedData = [];
-          }
-
-          setPosts(fetchedData);
-        }
+        const res = await communityAPI.getPosts({ tab: activeTab });
+        setPosts(Array.isArray(res?.items) ? res.items : Array.isArray(res) ? res : []);
       } catch (err) {
-        if (!ignore) {
-          setError(err);
-          setPosts([]);
-        }
+        setError(err);
       } finally {
-        if (!ignore) setLoading(false);
+        setLoading(false);
       }
     };
-
     loadPosts();
-    return () => { ignore = true; };
-    
-  }, [activeTab, refreshKey]); 
-
-  useEffect(() => {
-    const refreshOnVisible = () => {
-      if (!document.hidden) setRefreshKey((prev) => prev + 1);
-    };
-    document.addEventListener("visibilitychange", refreshOnVisible);
-    return () => document.removeEventListener("visibilitychange", refreshOnVisible);
-  }, []);
-
-  const pagination = useMemo(
-    () => buildPagination(currentPage, totalPages),
-    [currentPage, totalPages]
-  );
-
-  const handlePageChange = (page) => {
-    if (page === "prev-ellipsis") return setCurrentPage((p) => Math.max(1, p - 3));
-    if (page === "next-ellipsis") return setCurrentPage((p) => Math.min(totalPages, p + 3));
-    if (typeof page === "number" && page !== currentPage) {
-        setCurrentPage(page);
-        window.scrollTo(0, 0);
-    }
-  };
-
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    setCurrentPage(1); 
-  };
+  }, [activeTab, refreshKey]);
 
   return (
-    <section className="community-page">
-      <div className="community-page__container">
-
-        {/* 헤더 */}
-        <header className="community-page__header">
-          <div className="community-page__title-group">
-            <h2>커뮤니티</h2>
-            <p>서로의 마음을 나누고 응원해요.</p>
+    <div className="comm-wrapper">
+      <div className="comm-container">
+        
+        {/* 상단 헤더 & 버튼 */}
+        <header className="comm-header">
+          <div>
+            <h1 className="comm-title">커뮤니티</h1>
+            <p className="comm-subtitle">서로의 마음을 나누고 응원해요</p>
           </div>
-
-          <button
-            className="community-page__write-button"
-            onClick={() => navigate("/community/write")}
-          >
-            게시글 작성하기
+          <button className="comm-write-btn" onClick={() => navigate("/community/write")}>
+            🖊️ 글쓰기
           </button>
         </header>
 
-        {/* 탭 */}
-        <nav className="community-page__tabs">
-          {COMMUNITY_TABS.map((tab) => (
+        {/* 탭 메뉴 */}
+        <div className="comm-tabs">
+          {TABS.map((tab) => (
             <button
               key={tab.id}
-              className={`community-page__tab ${tab.id === activeTab ? "community-page__tab--active" : ""}`}
-              onClick={() => handleTabChange(tab.id)}
+              className={`comm-tab-btn ${activeTab === tab.id ? "active" : ""}`}
+              onClick={() => setActiveTab(tab.id)}
             >
               {tab.label}
             </button>
           ))}
-        </nav>
-
-        <div className="community-page__body">
-
-          {loading && (
-            <div className="community-page__loading">게시글을 불러오는 중입니다...</div>
-          )}
-
-          {!loading && error && (
-            <div className="community-page__error">커뮤니티 정보를 불러오지 못했어요.</div>
-          )}
-
-          {!loading && !error && (
-            <>
-              {posts.length === 0 ? (
-                <div className="community-page__empty">아직 게시글이 없어요.</div>
-              ) : (
-                <>
-                  <h3 className="community-page__section-title">
-                    전체 {posts.length}개의 이야기
-                  </h3>
-
-                  <div className="community-page__posts">
-                    {visiblePosts.map((post) => (
-                      <article
-                        key={post.id}
-                        className="community-post-card"
-                        onClick={() => navigate(`/community/post/${post.id}`)}
-                      >
-                        <div className="community-post-card__header">
-                          <div className="community-post-card__author">
-                            <div className="community-post-card__avatar" />
-                            <span>{post.authorName}</span>
-                          </div>
-                          <span>{formatDate(post.createdAt)}</span>
-                        </div>
-
-                        <h3 className="community-post-card__title">{post.title}</h3>
-
-                        <p className="community-post-card__content"><span>{post.content}</span></p>
-
-                        <div className="community-post-card__footer">
-                          <span>❤️ {post.likeCount}</span>
-                          <span>💬 {post.commentCount}</span>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
-          )}
         </div>
 
-        {/* 페이지네이션 */}
-        {!loading && !error && totalPages > 1 && (
-          <div className="community-page__pagination">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
-              ← 이전
-            </button>
-
-            {pagination.map((p) =>
-              typeof p === "string" ? (
-                <span key={p} className="community-page__page-number">...</span>
-              ) : (
-                <button
-                  key={p}
-                  className={`community-page__page-number ${p === currentPage ? "community-page__page-number--active" : ""}`}
-                  onClick={() => handlePageChange(p)}
-                >
-                  {p}
-                </button>
-              )
-            )}
-
-            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
-              다음 →
-            </button>
-          </div>
-        )}
+        {/* 게시글 목록 */}
+        <div className="comm-list">
+          {loading ? (
+            <div className="comm-loading">로딩 중...</div>
+          ) : posts.length === 0 ? (
+            <div className="comm-empty">아직 게시글이 없어요 🍂</div>
+          ) : (
+            posts.map((post) => (
+              <div
+                key={post.id}
+                className="comm-card"
+                onClick={() => navigate(`/community/post/${post.id}`)}
+              >
+                <div className="comm-card-body">
+                  <h3 className="comm-card-title">{post.title}</h3>
+                  <p className="comm-card-preview">{post.content}</p>
+                </div>
+                <div className="comm-card-footer">
+                  <div className="comm-card-info">
+                    <span className="author">{post.authorName}</span>
+                    <span className="date">{formatDate(post.createdAt)}</span>
+                  </div>
+                  <div className="comm-card-stats">
+                    <span>❤️ {post.likeCount}</span>
+                    <span>💬 {post.commentCount}</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

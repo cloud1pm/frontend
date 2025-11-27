@@ -1,13 +1,13 @@
-// src/pages/CommunityPostPage.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { communityAPI } from "../api/communityApi";
-import { useAuth } from "../context/AuthContext";   // 🔥 AuthContext로 현재 사용자 불러오기
+import { useAuth } from "../context/AuthContext";
+import { FiArrowLeft, FiHeart, FiMessageCircle, FiTrash2, FiEdit3 } from "react-icons/fi";
 import "./CommunityPostPage.css";
 
 const timeFormat = (t) => {
   if (!t) return "";
-  return new Date(t).toLocaleString("ko-KR", {
+  return new Date(t).toLocaleDateString("ko-KR", {
     month: "long",
     day: "numeric",
     hour: "2-digit",
@@ -18,6 +18,7 @@ const timeFormat = (t) => {
 export default function CommunityPostPage() {
   const { postId } = useParams();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
 
   const [post, setPost] = useState(null);
   const [commentList, setCommentList] = useState([]);
@@ -25,20 +26,17 @@ export default function CommunityPostPage() {
   const [commentText, setCommentText] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const { user: currentUser } = useAuth(); // 현재 로그인 사용자 정보
-
   const fetchPost = async () => {
     setLoading(true);
     try {
       const postData = await communityAPI.getPostById(postId);
       const commentsData = await communityAPI.getComments(postId);
-
       setPost(postData);
       setIsLiked(postData.isLiked);
       setCommentList(commentsData || []);
     } catch (err) {
-      console.error(err);
       alert("게시글을 불러오지 못했어요.");
+      navigate("/community");
     } finally {
       setLoading(false);
     }
@@ -51,7 +49,9 @@ export default function CommunityPostPage() {
   const handleLike = async () => {
     try {
       await communityAPI.likePost(postId);
-      fetchPost();
+      // 낙관적 업데이트 (UI 즉시 반영)
+      setPost(prev => ({ ...prev, likes: isLiked ? prev.likes - 1 : prev.likes + 1 }));
+      setIsLiked(!isLiked);
     } catch (err) {
       alert("좋아요 처리 실패!");
     }
@@ -59,11 +59,14 @@ export default function CommunityPostPage() {
 
   const handleCommentSubmit = async () => {
     if (!commentText.trim()) return;
-
     try {
       await communityAPI.addComment(postId, commentText.trim());
       setCommentText("");
-      fetchPost();
+      // 댓글 목록만 다시 불러오기
+      const commentsData = await communityAPI.getComments(postId);
+      setCommentList(commentsData || []);
+      // 댓글 수 업데이트
+      setPost(prev => ({ ...prev, comments: (prev.comments || 0) + 1 }));
     } catch (err) {
       alert("댓글 등록 실패");
     }
@@ -71,10 +74,11 @@ export default function CommunityPostPage() {
 
   const handleCommentDelete = async (commentId) => {
     if (!window.confirm("댓글을 삭제하시겠어요?")) return;
-
     try {
       await communityAPI.deleteComment(commentId);
-      fetchPost();
+      const commentsData = await communityAPI.getComments(postId);
+      setCommentList(commentsData || []);
+      setPost(prev => ({ ...prev, comments: Math.max(0, (prev.comments || 0) - 1) }));
     } catch (err) {
       alert("댓글 삭제 실패");
     }
@@ -82,135 +86,122 @@ export default function CommunityPostPage() {
 
   const handlePostDelete = async () => {
     if (!window.confirm("정말 삭제할까요?")) return;
-
     try {
       await communityAPI.deletePost(postId);
-      alert("게시글이 삭제되었습니다");
-      navigate("/community");
+      alert("게시글이 삭제되었습니다.");
+      navigate("/community", { replace: true });
     } catch (err) {
       alert("게시글 삭제 실패");
     }
   };
 
+  if (loading) return <div className="cpp-loading">로딩 중...</div>;
+  if (!post) return null;
+
   return (
-    <section className="community-post-page">
-      <div className="community-post-page__container">
+    <div className="cpp-wrapper">
+      <div className="cpp-container">
+        
+        {/* 상단 네비게이션 */}
+        <div className="cpp-nav">
+          <button className="cpp-back-btn" onClick={() => navigate("/community")}>
+            <FiArrowLeft size={20} />
+            <span>목록으로</span>
+          </button>
+        </div>
 
-        <button
-          className="community-post-page__back"
-          onClick={() => navigate("/community")}
-        >
-          ← 목록으로 돌아가기
-        </button>
-
-        {loading && <div>불러오는 중...</div>}
-
-        {!loading && post && (
-          <>
-            {/* 게시글 정보 */}
-            <article className="community-post-page__meta">
-              <h1 className="community-post-page__title">{post.title}</h1>
-
-              <div className="community-post-page__info">
-                <strong>{post.nickname || post.authorName}</strong>
-                <span>{timeFormat(post.createdAt)}</span>
+        {/* 게시글 본문 카드 */}
+        <article className="cpp-card">
+          <header className="cpp-header">
+            <h1 className="cpp-title">{post.title}</h1>
+            <div className="cpp-meta">
+              <div className="cpp-author">
+                <span className="cpp-avatar">{post.nickname?.[0] || "U"}</span>
+                <span className="cpp-name">{post.nickname || post.authorName}</span>
               </div>
+              <span className="cpp-date">{timeFormat(post.createdAt)}</span>
+            </div>
+          </header>
 
-              <div className="community-post-page__content">
-                {post.fullContent || post.content}
-              </div>
+          <div className="cpp-body">
+            <p className="cpp-content">{post.fullContent || post.content}</p>
+          </div>
 
-              <div className="community-post-page__footer">
-                <button
-                  className="community-post-page__like-button"
-                  onClick={handleLike}
+          <div className="cpp-actions">
+            <button 
+              className={`cpp-like-btn ${isLiked ? "liked" : ""}`} 
+              onClick={handleLike}
+            >
+              <FiHeart className={isLiked ? "fill-heart" : ""} />
+              <span>좋아요 {post.likes}</span>
+            </button>
+
+            {/* 작성자 본인일 경우 수정/삭제 */}
+            {currentUser?.nickname === post.nickname && (
+              <div className="cpp-owner-actions">
+                <button 
+                  onClick={() => navigate(`/community/edit/${postId}`, { state: { post } })}
                 >
-                  {isLiked ? "❤️" : "🤍"} {post.likes}
+                  <FiEdit3 /> 수정
                 </button>
-                <span>💬 {commentList.length}</span>
+                <button className="delete" onClick={handlePostDelete}>
+                  <FiTrash2 /> 삭제
+                </button>
               </div>
+            )}
+          </div>
+        </article>
 
-              {/* 게시글 작성자 본인이면 글 수정/삭제 버튼 표시 */}
-              {currentUser?.nickname === post.nickname && (
-                <div className="community-post-page__actions">
-                  <button
-                    className="community-post-page__edit-button"
-                    onClick={() =>
-                      navigate(`/community/edit/${postId}`, { state: { post } })
-                    }
-                  >
-                    수정
-                  </button>
+        {/* 댓글 섹션 */}
+        <section className="cpp-comments-section">
+          <h3 className="cpp-comments-title">
+            <FiMessageCircle /> 댓글 {commentList.length}개
+          </h3>
 
-                  <button
-                    className="community-post-page__delete-button"
-                    onClick={handlePostDelete}
-                  >
-                    삭제
-                  </button>
-                </div>
-              )}
-            </article>
-
-            <div className="community-post-page__divider" />
-
-            {/* 댓글 영역 */}
-            <section className="community-post-page__comments-section">
-              <h2 className="community-post-page__comments-header">
-                댓글 {commentList.length}개
-              </h2>
-
-              <div className="community-post-page__comments-list">
-                {commentList.map((c) => (
-                  <div key={c.id} className="community-comment">
-
-                    {/* 댓글 헤더 */}
-                    <div className="community-comment__header">
-                      <span className="community-comment__author">
-                        {c.authorName}
-                      </span>
-
-                      <div className="community-comment__meta">
-                        <span>{timeFormat(c.createdAt)}</span>
-
-                        {/* 내 댓글일 때만 삭제 버튼 표시 */}
-                        {currentUser?.nickname === c.authorName && (
-                          <button
-                            className="community-comment__delete"
-                            onClick={() => handleCommentDelete(c.id)}
-                          >
-                            삭제
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 댓글 내용 */}
-                    <p className="community-comment__content">{c.content}</p>
+          <div className="cpp-comment-list">
+            {commentList.length === 0 ? (
+              <p className="cpp-no-comments">첫 번째 댓글을 남겨보세요! 💬</p>
+            ) : (
+              commentList.map((c) => (
+                <div key={c.id} className="cpp-comment-item">
+                  <div className="cpp-comment-header">
+                    <span className="cpp-comment-author">{c.authorName}</span>
+                    <span className="cpp-comment-date">{timeFormat(c.createdAt)}</span>
                   </div>
-                ))}
-              </div>
+                  <p className="cpp-comment-text">{c.content}</p>
+                  
+                  {currentUser?.nickname === c.authorName && (
+                    <button 
+                      className="cpp-comment-delete" 
+                      onClick={() => handleCommentDelete(c.id)}
+                    >
+                      삭제
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
 
-              {/* 댓글 입력 */}
-              <div className="community-post-page__comment-form">
-                <label>댓글 작성하기</label>
-                <textarea
-                  className="community-post-page__comment-textarea"
-                  placeholder="따뜻한 말 한마디를 남겨주세요."
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                />
-                <button
-                  className="community-post-page__comment-submit"
-                  onClick={handleCommentSubmit}
-                >
-                  댓글 작성하기
-                </button>
-              </div>
-            </section>
-          </>
-        )}
+          {/* 댓글 입력창 */}
+          <div className="cpp-comment-form">
+            <textarea
+              className="cpp-comment-input"
+              placeholder="따뜻한 말 한마디를 남겨주세요..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+            />
+            <button 
+              className="cpp-comment-submit" 
+              onClick={handleCommentSubmit}
+              disabled={!commentText.trim()}
+            >
+              등록
+            </button>
+          </div>
+        </section>
+
       </div>
-    </section>
+    </div>
   );
 }

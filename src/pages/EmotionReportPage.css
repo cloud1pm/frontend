@@ -1,127 +1,117 @@
+/* EmotionReportPage.css */
+/* Warm + Deep Blue Theme (Enc Page 스타일 계열) */
+
 .emotion-report-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  background-color: #fafafa;
+  width: 100%;
   min-height: 100vh;
+  background-color: #fdfbf7; /* Warm Cream */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 20px;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+  box-sizing: border-box;
 }
 
-/* 헤더 */
 .report-header {
-  margin-bottom: 24px;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 .report-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 8px;
+  font-size: 26px;
+  font-weight: 800;
+  color: #1e3a8a;
+  margin: 0 0 8px 0;
 }
 
 .report-subtitle {
   font-size: 15px;
-  color: #6b7280;
-  line-height: 1.5;
+  color: #64748b;
+  margin: 0;
 }
 
-/* 기간 선택 탭 */
+/* 기간 탭 */
 .period-tabs {
   display: flex;
   gap: 12px;
+  margin-top: 20px;
   margin-bottom: 24px;
-  background-color: white;
-  padding: 6px;
-  border-radius: 12px;
-  width: fit-content;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .period-tab {
-  padding: 10px 24px;
-  border: none;
-  background-color: transparent;
-  border-radius: 8px;
+  padding: 10px 18px;
+  background: #f1f5f9;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  color: #475569;
   font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .period-tab:hover {
-  background-color: #f3f4f6;
+  background: #e2e8f0;
 }
 
 .period-tab.active {
-  background-color: #7c3aed;
-  color: white;
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
-/* 감정 상태 요약 */
-.emotion-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+/* 점수 안내 카드 */
+.emotion-info-simple {
+  width: 100%;
+  max-width: 520px;
+  background: #fffbeb;
+  padding: 18px 20px;
+  border-radius: 20px;
+  border: 1px solid #fde68a;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.1);
+  color: #92400e;
   margin-bottom: 24px;
 }
 
-.summary-card {
-  background-color: white;
-  border-radius: 12px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.emotion-info-simple p {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 6px 0;
 }
 
-.summary-emoji {
-  font-size: 36px;
-}
-
-.summary-info {
-  flex: 1;
-}
-
-.summary-label {
+.emotion-tip {
+  margin-top: 10px;
   font-size: 13px;
-  color: #6b7280;
-  margin-bottom: 4px;
+  opacity: 0.9;
 }
 
-.summary-value {
-  font-size: 20px;
-  font-weight: 600;
-  color: #111827;
-}
-
-/* 차트 영역 */
+/* 그래프 카드 */
 .chart-container {
-  background-color: white;
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 520px;
+  background: white;
+  padding: 28px 20px;
+  border-radius: 28px;
+  border: 1px solid #eff6ff;
+  box-shadow: 0 20px 40px rgba(30, 58, 138, 0.06);
 }
 
-/* 로딩 상태 */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  color: #6b7280;
+/* 로딩 */
+.loading-state, .error-state, .empty-state {
+  text-align: center;
+  padding: 40px 0;
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #e5e7eb;
-  border-top-color: #7c3aed;
+  width: 28px;
+  height: 28px;
+  border: 3px solid #dbeafe;
+  border-top: 3px solid #2563eb;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+  margin: 0 auto 12px auto;
 }
 
 @keyframes spin {
@@ -130,237 +120,36 @@
   }
 }
 
-/* 에러 상태 */
-.error-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-}
-
 .error-message {
-  color: #ef4444;
-  font-size: 15px;
-  margin-bottom: 16px;
+  color: #b91c1c;
+  font-size: 14px;
+  margin-bottom: 14px;
 }
 
 .retry-button {
-  padding: 10px 20px;
-  background-color: #7c3aed;
+  padding: 10px 18px;
+  background: #2563eb;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 18px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
 }
 
 .retry-button:hover {
-  background-color: #6d28d9;
-}
-
-/* 빈 상태 */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
-}
-
-.empty-emoji {
-  font-size: 48px;
-  margin-bottom: 16px;
+  background: #1d4ed8;
 }
 
 .empty-message {
-  font-size: 16px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #475569;
 }
 
 .empty-description {
-  font-size: 14px;
-  color: #6b7280;
-  line-height: 1.5;
-}
-
-/* 감정 가이드 */
-.emotion-guide {
-  background-color: white;
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.guide-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 16px;
-}
-
-.guide-items {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-}
-
-.guide-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.guide-badge {
-  padding: 6px 16px;
-  border-radius: 20px;
   font-size: 13px;
-  font-weight: 600;
-  color: white;
-}
-
-.guide-badge.positive {
-  background-color: #10b981;
-}
-
-.guide-badge.neutral {
-  background-color: #f59e0b;
-}
-
-.guide-badge.negative {
-  background-color: #ef4444;
-}
-
-.guide-text {
-  font-size: 13px;
-  color: #6b7280;
-  text-align: center;
-}
-
-/* 조언 카드 */
-.advice-card {
-  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-}
-
-.advice-icon {
-  font-size: 32px;
-  flex-shrink: 0;
-}
-
-.advice-content {
-  flex: 1;
-}
-
-.advice-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #5b21b6;
-  margin-bottom: 8px;
-}
-
-.advice-text {
-  font-size: 14px;
-  color: #6b21a8;
-  line-height: 1.6;
-}
-
-/* 개발용 컨트롤 */
-.dev-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  padding: 12px 16px;
-  background-color: #fef3c7;
-  border-radius: 8px;
-  border: 1px solid #fbbf24;
-}
-
-.dev-button {
-  padding: 8px 16px;
-  background-color: white;
-  border: 1px solid #d97706;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #d97706;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.dev-button:hover {
-  background-color: #fef3c7;
-}
-
-.dev-label {
-  font-size: 13px;
-  color: #92400e;
-  font-weight: 500;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .emotion-report-container {
-    padding: 24px 16px;
-  }
-
-  .report-title {
-    font-size: 24px;
-  }
-
-  .report-subtitle {
-    font-size: 14px;
-  }
-
-  .period-tabs {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .period-tab {
-    flex: 1;
-  }
-
-  .emotion-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .chart-container {
-    padding: 16px;
-  }
-
-  .guide-items {
-    grid-template-columns: 1fr;
-  }
-
-  .advice-card {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-}
-
-/* Recharts 커스텀 스타일 */
-.recharts-wrapper {
-  margin: 0 auto;
-}
-
-.recharts-cartesian-axis-tick-value {
-  fill: #6b7280;
-}
-
-.recharts-tooltip-wrapper {
-  outline: none;
+  color: #64748b;
+  margin-top: 6px;
 }

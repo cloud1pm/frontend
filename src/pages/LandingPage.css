@@ -2,8 +2,13 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(circle at top left, #f4e8ff 0, #f9fafb 45%, #ece9ff 100%);
-  color: #111827;
+  background: linear-gradient(
+    135deg,
+    #e0f2fe 0%,
+    #e6f3ff 40%,
+    #f3f8ff 100%
+  ); /* 파스텔 하늘 그라데이션 */
+  color: #1e293b;
   font-family: -apple-system, BlinkMacSystemFont, "Pretendard", system-ui, sans-serif;
 }
 
@@ -18,7 +23,7 @@
   font-weight: 700;
   font-size: 20px;
   letter-spacing: 0.03em;
-  color: #4c1d95;
+  color: #1e3a8a; /* deep navy */
 }
 
 .landing-main {
@@ -38,7 +43,7 @@
   font-size: 42px;
   line-height: 1.25;
   margin-bottom: 20px;
-  color: #111827;
+  color: #1e3a8a;
 }
 
 .landing-subtitle {
@@ -67,7 +72,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  color: #8b5cf6;
+  color: #2563eb; /* soft blue */
 }
 
 .landing-button {
@@ -77,24 +82,21 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  background: #8b5cf6;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: white;
-  box-shadow: 0 8px 18px rgba(139, 92, 246, 0.35);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
   transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 
 .landing-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(139, 92, 246, 0.4);
-  background: #7c3aed;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.35);
 }
-
-
 
 /* footer */
 .landing-footer {
   padding: 12px 40px 18px;
   font-size: 12px;
-  color: #9ca3af;
+  color: #64748b;
+  text-align: center;
 }
-
