@@ -128,7 +128,10 @@ const OnboardingPage = () => {
 
     try {
       const formattedSolutions = Object.entries(solutions).flatMap(([level, items]) =>
-        items.map((solution) => ({ riskLevel: Number(level), solution }))
+        items.map((solution) => ({ 
+            riskLevel: Number(level) + 5,
+            solution 
+        }))
       );
 
       if (isSignupMode) {
